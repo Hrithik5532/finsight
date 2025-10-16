@@ -1,0 +1,522 @@
+:root{
+  --pro-text:#1a1a1a;
+  --pro-muted:#6b7280;
+  --pro-border:#e5e7eb;
+  --pro-surface:#ffffff;
+  --pro-surface-subtle:#fcfbf8;
+  --pro-accent:#e48415;
+}
+
+html, body {
+  font-family: "Inter", "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  color: var(--pro-text);
+}
+
+.pro-table{ width:100%; border-collapse:separate; border-spacing:0; background:var(--pro-surface); border:1px solid var(--pro-border); border-radius:10px; overflow:hidden; }
+.pro-thead{ position:sticky; top:0; background:#f8fafc !important; z-index:1; border-bottom: 2px solid #000000; }
+.pro-th{ text-align:left; padding:12px 14px; border-right:1px solid var(--pro-border); font-weight:600; letter-spacing:0.02em; font-size:0.925rem; background:#f8fafc !important; border-bottom: 2px solid #000000; }
+
+/* Force white text for ALL response table headers - maximum specificity */
+.chat-response-text table thead,
+.chat-response-text table thead tr,
+.chat-response-text table thead th,
+.chat-response-text .pro-table thead,
+.chat-response-text .pro-table thead tr,
+.chat-response-text .pro-table thead th,
+.chat-response-text table th,
+.chat-response-text .pro-table th,
+.chat-response-text thead th,
+.chat-response-text .pro-thead th,
+.chat-response-text .light-table-header,
+.chat-response-text thead.light-table-header,
+.chat-response-text th.light-table-header,
+.chat-response-text th.text-gray-300,
+.chat-response-text th.font-medium,
+.chat-response-text th.font-semibold {
+  background: #374151 !important; /* dark gray background */
+  color: #ffffff !important; /* white text */
+  border-bottom: 2px solid #000000 !important;
+}
+
+/* Ultra-specific overrides for every possible table header class combination */
+.chat-response-text .pro-th,
+.chat-response-text table th,
+.chat-response-text .light-table-header,
+.chat-response-text th.light-table-header,
+.chat-response-text th.text-left,
+.chat-response-text th.text-center,
+.chat-response-text th.p-3,
+.chat-response-text th.p-2,
+.chat-response-text th.border-b,
+.chat-response-text th.font-semibold,
+.chat-response-text th.font-medium,
+.chat-response-text th.text-gray-300,
+.chat-response-text th.bg-gray-800,
+.chat-response-text thead th,
+.chat-response-text thead.sticky th,
+.chat-response-text thead.light-table-header th {
+  color: #ffffff !important;
+}
+/* Nuclear option - override ANY text color in response table headers */
+.chat-response-text th[class*="text-"],
+.chat-response-text thead th[class*="text-"],
+.chat-response-text table th[class*="text-"],
+.chat-response-text th[style*="color"],
+.chat-response-text thead th[style*="color"],
+.chat-response-text table th[style*="color"] {
+  color: #ffffff !important;
+}
+
+/* Fix for ALL elements inside table headers */
+.chat-response-text th *,
+.chat-response-text thead th *,
+.chat-response-text table th *,
+.chat-response-text th strong,
+.chat-response-text th span,
+.chat-response-text th strong.text-gray-900,
+.chat-response-text th strong.font-bold,
+.chat-response-text th strong.chat-response-text,
+.chat-response-text thead th strong.text-gray-900,
+.chat-response-text table th strong.text-gray-900,
+.chat-response-text th span[style*="color"],
+.chat-response-text th strong[style*="color"] {
+  color: #ffffff !important;
+}
+/* Improved data formatting and alignment */
+.chat-response-text p:has-text(":") {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+/* Better spacing for financial data */
+.chat-response-text div:has(p) {
+  margin-bottom: 0.75rem;
+}
+
+/* Source information styling */
+.chat-response-text p:contains("📍 Source:") {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+  padding-left: 1rem;
+  border-left: 2px solid #e5e7eb;
+  background-color: #f9fafb;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* Data value alignment */
+.chat-response-text p[data-format="financial"] {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+/* Ensure header never moves - completely static */
+nav {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+/* Prevent any scroll-based transforms on header */
+nav * {
+  transform: none !important;
+  transition: transform 0s !important;
+}
+
+.table-sidebar table thead, .table-sidebar table thead tr, .table-sidebar table thead th {
+  background: #374151 !important;
+  color: #ffffff !important;
+  border-bottom: 2px solid #000000 !important;
+}
+.pro-tr{ background:#fff; }
+.pro-tr:nth-child(even){ background:#fafafa; }
+
+.pro-tr:hover{ background: inherit !important; }
+table tr:hover, .pro-table tr:hover {
+  background-color: inherit !important;
+}
+.pro-td{ padding:12px 14px; border-top:1px solid var(--pro-border); border-right:1px solid var(--pro-border); color:#1f2937; }
+
+.pro-chip{ background:#ffffff; border:1px solid var(--pro-border); color:var(--pro-text); border-radius:10px; padding:6px 10px; font-weight:500; box-shadow:0 1px 2px rgba(0,0,0,0.04); transition:all .2s ease; }
+.pro-chip:hover{ box-shadow:0 4px 10px rgba(0,0,0,0.06); transform:translateY(-1px); }
+.pro-chip.active{ border-color: var(--pro-accent); box-shadow:0 0 0 3px rgba(228,132,21,0.15); }
+
+.pro-icon-btn{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border:1px solid var(--pro-border); border-radius:10px; background:#fff; color:var(--pro-text); transition:all .2s ease; }
+.pro-icon-btn:hover{ border-color:#f3a54a; box-shadow:0 4px 10px rgba(228,132,21,0.15); }
+
+.pro-shadow{ box-shadow:0 8px 30px rgba(0,0,0,0.06); }
+
+.z-panel-top{ z-index:999999 !important; }
+
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #fcfbf8;
+  color: #1f2937;
+  line-height: 1.6;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid #e48415;
+  outline-offset: 2px;
+}
+
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.export-dropdown {
+  position: relative;
+}
+
+@supports (backdrop-filter: blur(8px)) {
+  .backdrop-blur-sm {
+    backdrop-filter: blur(8px);
+  }
+}
+
+.primary-gradient {
+  background: linear-gradient(90deg, #4D4D4D 0%, #0D0D0D 100%);
+}
+
+.secondary-gradient {
+  background: linear-gradient(to right, rgba(228, 132, 21, 0.7490196078), rgba(200, 76, 49, 0.7803921569));
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, #e48415 0%, #c84c31 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.main-shadow {
+  box-shadow: 0px 0px 20px 6px rgba(238, 161, 74, 0.19);
+}
+
+.light-bg-primary {
+  background-color: #fcfbf8;
+}
+
+.light-bg-secondary {
+  background-color: #ffffff;
+}
+
+.light-text-primary {
+  color: #1a1a1a;
+}
+
+.light-text-secondary {
+  color: #6b7280;
+}
+
+.chat-response-text {
+  color: #1a1a1a !important;
+  font-weight: 400;
+  line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.005em;
+}
+
+.light-border {
+  border-color: #e5e7eb;
+}
+
+.light-hover:hover {
+  background-color: #f9fafb;
+}
+
+.light-table-header {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+  font-weight: 500;
+}
+
+.light-table-row:hover {
+  background-color: inherit !important;
+  transition: none !important;
+}
+
+.light-table-cell {
+  color: #d1d5db;
+  border-color: #374151;
+  font-weight: 400;
+}
+
+.light-processing-bg {
+  background-color: #fef3c7;
+  border-color: #f59e0b;
+}
+
+.light-processing-text {
+  color: #92400e;
+}
+
+.light-theme-override {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+  border-color: #e5e7eb !important;
+}
+
+.professional-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.professional-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.professional-input {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.professional-input:focus {
+  border-color: #e48415;
+  box-shadow: 0 0 0 3px rgba(228, 132, 21, 0.1);
+  outline: none;
+}
+
+.professional-button {
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.professional-button:hover {
+  transform: translateY(-1px);
+}
+
+.professional-text {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.6;
+}
+
+.enterprise-shadow {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+
+.btn-primary{background:#e48415;color:#fff;border-radius:10px;padding:.6rem .9rem;box-shadow:0 6px 18px rgba(228,132,21,.18);}
+.btn-primary:hover{filter:brightness(1.03);transform:translateY(-1px);}
+.btn-primary:active{transform:translateY(0);}
+.btn-secondary{background:#fff;border:1px solid #e5e7eb;color:#1a1a1a;border-radius:10px;padding:.6rem .9rem;}
+.btn-secondary:hover{background:#fafafa;border-color:#e5e7eb;}
+.btn-quiet{background:transparent;color:#6b7280;padding:.5rem .6rem;border-radius:10px;}
+.btn-quiet:hover{background:#f8fafc;color:#374151;}
+
+.section{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.06);}
+.section-title{font-weight:600;letter-spacing:.01em;color:#1a1a1a;margin-bottom:.5rem;}
+.section-subtle{background:linear-gradient(135deg,#fff 0%,#f8fafc 100%);}
+
+.input{background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:.55rem .8rem;}
+.input:focus{border-color:#e48415;box-shadow:0 0 0 3px rgba(228,132,21,.12);outline:0;}
+.input.invalid{border-color:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.12);}
+
+.elevate{box-shadow:0 14px 28px rgba(0,0,0,.08);}
+.soft-divider{border-top:1px solid #edf2f7;}
+.kbd{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:6px;padding:2px 6px;font-size:.8rem;}
+
+.table-compact .pro-th,.table-compact .pro-td{padding:8px 10px;}
+.table-muted tr:not(:first-child) td{border-top-color:#f1f5f9;}
+
+.skeleton{position:relative;overflow:hidden;background:#f3f4f6;border-radius:8px;}
+.skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);transform:translateX(-100%);animation:shimmer 1.2s infinite;}
+@keyframes shimmer{to{transform:translateX(100%);}}
+
+.progress-bar{height:4px;border-radius:6px;background:#f3f4f6;overflow:hidden;}
+.progress-bar>span{display:block;height:100%;width:40%;background:#e48415;animation:slide 1.2s infinite;}
+@keyframes slide{0%{transform:translateX(-40%);}100%{transform:translateX(140%);}}
+
+/* Enhanced markdown response styling */
+.chat-response-text h1 {
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-response-text h1::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #f97316, #ef4444);
+  border-radius: 2px;
+}
+
+.chat-response-text h2 {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.chat-response-text h2:hover {
+  transform: translateX(2px);
+}
+
+.chat-response-text strong {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.chat-response-text strong:hover {
+  transform: scale(1.02);
+}
+
+.chat-response-text pre {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.chat-response-text pre:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.chat-response-text blockquote {
+  transition: all 0.2s ease;
+}
+
+.chat-response-text blockquote:hover {
+  transform: translateX(2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+/* Smooth animations for list items */
+.chat-response-text li {
+  transition: all 0.2s ease;
+}
+
+.chat-response-text li:hover {
+  transform: translateX(2px);
+}
+
+.chat-response-text li:hover span:first-child {
+  transform: scale(1.2);
+  background: #ef4444;
+}
+/* Show red dots only for unordered lists (bullet points) */
+.chat-response-text .unordered-list {
+  padding-left: 0;
+}
+
+.chat-response-text .unordered-list li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  padding-left: 0;
+}
+
+.chat-response-text .unordered-list li::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: #ef4444;
+  border-radius: 50%;
+  margin-top: 8px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+/* Nested unordered lists */
+.chat-response-text .unordered-list .unordered-list {
+  margin-top: 0.5rem;
+  margin-left: 1.5rem;
+}
+
+.chat-response-text .unordered-list .unordered-list li::before {
+  width: 4px;
+  height: 4px;
+  background: #6b7280;
+}
+
+.chat-response-text .ordered-list {
+  list-style-type: decimal;
+  list-style-position: outside;
+  padding-left: 1.5rem;
+}
+
+.chat-response-text .ordered-list li {
+  margin-bottom: 0.5rem;
+  padding-left: 0.5rem;
+  display: list-item;
+}
+
+.chat-response-text .unordered-list li:hover::before {
+  transform: scale(1.1);
+}
