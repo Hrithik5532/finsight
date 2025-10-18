@@ -4,7 +4,7 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 const FinancialAIAssistant = () => {
-  const API_BASE_URL = 'https://finsight.tatvahitech.com';
+  const API_BASE_URL = 'http://54.243.27.109:8989';
 
   const [userName, setUserName] = useState('');
   const [isUserNameSet, setIsUserNameSet] = useState(false);
@@ -98,10 +98,13 @@ const FinancialAIAssistant = () => {
   };
 
   const handleSelectCompany = (company) => {
+    console.log('Selected company object:', company);  // ← ADD THIS
+    console.log('Company slug:', company.name);        // ← ADD THIS
+    
     setSelectedCompanies(prev => {
-      const isAlreadySelected = prev.find(c => c.slug === company.slug);
+      const isAlreadySelected = prev.find(c => c.name === company.name);
       if (isAlreadySelected) {
-        return prev.filter(c => c.slug !== company.slug);
+        return prev.filter(c => c.name !== company.name);
       } else {
         return [...prev, company];
       }
@@ -110,7 +113,7 @@ const FinancialAIAssistant = () => {
   };
 
   const handleRemoveCompany = (companySlug) => {
-    setSelectedCompanies(prev => prev.filter(c => c.slug !== companySlug));
+    setSelectedCompanies(prev => prev.filter(c => c.name !== companySlug));
   };
 
   const handleSelectAllBySector = (sector) => {
@@ -118,7 +121,7 @@ const FinancialAIAssistant = () => {
     setSelectedCompanies(prev => {
       const newSelection = [...prev];
       companiesInSector.forEach(company => {
-        if (!newSelection.find(c => c.slug === company.slug)) {
+        if (!newSelection.find(c => c.name === company.slug)) {
           newSelection.push(company);
         }
       });
@@ -132,7 +135,7 @@ const FinancialAIAssistant = () => {
     setSelectedCompanies(prev => {
       const newSelection = [...prev];
       companiesInIndustry.forEach(company => {
-        if (!newSelection.find(c => c.slug === company.slug)) {
+        if (!newSelection.find(c => c.name === company.slug)) {
           newSelection.push(company);
         }
       });
@@ -181,7 +184,7 @@ const FinancialAIAssistant = () => {
       content: userQuery,
       id: `user-${Date.now()}`,
       timestamp: new Date(),
-      selectedCompanies: selectedCompanies.map(c => c.name || c.slug)
+      selectedCompanies: selectedCompanies.map(c => c.name || c.name)
     };
     setMessages(prev => [...prev, userMessage]);
 
@@ -196,16 +199,20 @@ const FinancialAIAssistant = () => {
     setMessages(prev => [...prev, streamingMessage]);
 
     try {
+      const payload = {
+        query: userQuery,
+        user_name: userName,
+        companies: selectedCompanies.map(c => c.name)
+      };
+
+      console.log('Sending payload:', JSON.stringify(payload, null, 2));
+
       const response = await fetch(`${API_BASE_URL}/financial/chat/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          query: userQuery,
-          user_name: userName,
-          companies: selectedCompanies.map(c => c.slug)  // ← Send slug to API
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -390,7 +397,7 @@ const FinancialAIAssistant = () => {
                             <div className="flex items-start space-x-3">
                               <input
                                 type="checkbox"
-                                checked={selectedCompanies.some(c => c.slug === company.slug)}
+                                checked={selectedCompanies.some(c => c.name === company.slug)}
                                 onChange={() => {}}
                                 className="w-4 h-4 text-blue-600 rounded cursor-pointer mt-0.5"
                               />
@@ -547,7 +554,7 @@ const FinancialAIAssistant = () => {
                     <p className="text-base mb-6 text-gray-600">Select companies above and ask about their financial metrics</p>
                     {selectedCompanies.length > 0 && (
                       <div className="text-sm mb-4 text-blue-600 font-semibold">
-                        Analyzing: <span className="text-blue-700">{selectedCompanies.map(c => c.name || c.slug).join(', ')}</span>
+                        Analyzing: <span className="text-blue-700">{selectedCompanies.map(c => c.name || c.name).join(', ')}</span>
                       </div>
                     )}
                   </div>
@@ -662,7 +669,7 @@ const FinancialAIAssistant = () => {
                     <button
                       onClick={() => {
                         if (inputRef.current) {
-                          inputRef.current.value = `Compare ${selectedCompanies.map(c => c.slug).join(' and ')} quarterly results`;
+                          inputRef.current.value = `Compare ${selectedCompanies.map(c => c.name).join(' and ')} quarterly results`;
                         }
                       }}
                       className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-100 border-2 border-blue-200 font-semibold text-xs transition-all"
@@ -672,7 +679,7 @@ const FinancialAIAssistant = () => {
                     <button
                       onClick={() => {
                         if (inputRef.current) {
-                          inputRef.current.value = `Show profit margins for ${selectedCompanies.map(c => c.slug).join(', ')}`;
+                          inputRef.current.value = `Show profit margins for ${selectedCompanies.map(c => c.name).join(', ')}`;
                         }
                       }}
                       className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-100 border-2 border-blue-200 font-semibold text-xs transition-all"
@@ -682,7 +689,7 @@ const FinancialAIAssistant = () => {
                     <button
                       onClick={() => {
                         if (inputRef.current) {
-                          inputRef.current.value = `What is YoY growth for ${selectedCompanies.map(c => c.slug).join(', ')}?`;
+                          inputRef.current.value = `What is YoY growth for ${selectedCompanies.map(c => c.name).join(', ')}?`;
                         }
                       }}
                       className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-100 border-2 border-blue-200 font-semibold text-xs transition-all"
