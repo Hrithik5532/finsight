@@ -1,25 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Send, Bot, Building2, RefreshCw, Search, X, LogOut, Filter, ChevronDown, TrendingUp } from 'lucide-react';
+import { Send, Bot, Building2, RefreshCw, Search, X, LogOut, Filter, ChevronDown, TrendingUp, Moon, Sun, Sparkles, Activity } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 const FinancialAIAssistant = () => {
   const API_BASE_URL = 'https://finsight.tatvahitech.com';
-
-  // Logo Component
-  const LogoIcon = ({ size = 'md' }) => {
-    const sizeMap = {
-      sm: 'w-8 h-8',
-      md: 'w-10 h-10',
-      lg: 'w-16 h-16'
-    };
-
-    return (
-      <div className={`${sizeMap[size]} bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center`}>
-        <TrendingUp className="text-white" size={size === 'lg' ? 40 : size === 'md' ? 24 : 16} />
-      </div>
-    );
-  };
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   const [userName, setUserName] = useState('');
   const [isUserNameSet, setIsUserNameSet] = useState(false);
@@ -40,7 +26,6 @@ const FinancialAIAssistant = () => {
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
   const messagesEndRef = useRef(null);
-  const chatContainerRef = useRef(null);
 
   const queryCount = useMemo(() => {
     return messages.filter(m => m.type === 'user').length;
@@ -113,13 +98,10 @@ const FinancialAIAssistant = () => {
   };
 
   const handleSelectCompany = (company) => {
-    console.log('Selected company object:', company);
-    console.log('Company slug:', company.name);
-    
     setSelectedCompanies(prev => {
-      const isAlreadySelected = prev.find(c => c.name === company.name);
+      const isAlreadySelected = prev.find(c => c.slug === company.slug);
       if (isAlreadySelected) {
-        return prev.filter(c => c.name !== company.name);
+        return prev.filter(c => c.slug !== company.slug);
       } else {
         return [...prev, company];
       }
@@ -128,7 +110,7 @@ const FinancialAIAssistant = () => {
   };
 
   const handleRemoveCompany = (companySlug) => {
-    setSelectedCompanies(prev => prev.filter(c => c.name !== companySlug));
+    setSelectedCompanies(prev => prev.filter(c => c.slug !== companySlug));
   };
 
   const handleSelectAllBySector = (sector) => {
@@ -136,13 +118,12 @@ const FinancialAIAssistant = () => {
     setSelectedCompanies(prev => {
       const newSelection = [...prev];
       companiesInSector.forEach(company => {
-        if (!newSelection.find(c => c.name === company.name)) {
+        if (!newSelection.find(c => c.slug === company.slug)) {
           newSelection.push(company);
         }
       });
       return newSelection;
     });
-    setValidationError('');
   };
 
   const handleSelectAllByIndustry = (industry) => {
@@ -150,13 +131,12 @@ const FinancialAIAssistant = () => {
     setSelectedCompanies(prev => {
       const newSelection = [...prev];
       companiesInIndustry.forEach(company => {
-        if (!newSelection.find(c => c.name === company.name)) {
+        if (!newSelection.find(c => c.slug === company.slug)) {
           newSelection.push(company);
         }
       });
       return newSelection;
     });
-    setValidationError('');
   };
 
   const clearFilters = () => {
@@ -199,7 +179,7 @@ const FinancialAIAssistant = () => {
       content: userQuery,
       id: `user-${Date.now()}`,
       timestamp: new Date(),
-      selectedCompanies: selectedCompanies.map(c => c.name || c.name)
+      selectedCompanies: selectedCompanies.map(c => c.name)
     };
     setMessages(prev => [...prev, userMessage]);
 
@@ -220,8 +200,6 @@ const FinancialAIAssistant = () => {
         companies: selectedCompanies.map(c => c.name)
       };
 
-      console.log('Sending payload:', JSON.stringify(payload, null, 2));
-
       const response = await fetch(`${API_BASE_URL}/financial/chat/`, {
         method: 'POST',
         headers: {
@@ -230,9 +208,7 @@ const FinancialAIAssistant = () => {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
+      if (!response.ok) throw new Error('Failed to get response');
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -240,9 +216,7 @@ const FinancialAIAssistant = () => {
 
       while (true) {
         const { done, value } = await reader.read();
-        
         if (done) break;
-
         const chunk = decoder.decode(value, { stream: true });
         accumulatedContent += chunk;
 
@@ -287,12 +261,8 @@ const FinancialAIAssistant = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
@@ -308,73 +278,77 @@ const FinancialAIAssistant = () => {
 
   if (!isUserNameSet) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 overflow-hidden">
-        {/* Animated background elements */}
-        <div className="absolute top-20 right-10 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+      <div className="min-h-screen bg-black text-white flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Grid background */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'linear-gradient(0deg, transparent 24%, rgba(0, 255, 200, .05) 25%, rgba(0, 255, 200, .05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 200, .05) 75%, rgba(0, 255, 200, .05) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 200, .05) 25%, rgba(0, 255, 200, .05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 200, .05) 75%, rgba(0, 255, 200, .05) 76%, transparent 77%, transparent)',
+            backgroundSize: '50px 50px'
+          }}></div>
+        </div>
+
+        {/* Animated gradient orbs */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-600 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-600 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-32 left-1/2 w-96 h-96 bg-cyan-500 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
 
         <div className="relative z-10 w-full max-w-md">
-          {/* Header Section */}
           <div className="text-center mb-12">
-            {/* Logo */}
-            <div className="flex justify-center mb-8">
-              <div className="hover:scale-110 transition-transform duration-300">
-                {/* <LogoIcon size="lg" /> */}
-                <img 
+            {/* Animated logo */}
+            <div className="flex justify-center mb-8 relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl blur-xl opacity-50 animate-pulse"></div>
+              <div className="relative bg-gradient-to-br from-cyan-500 to-black-600 rounded-xl p-4 shadow-2xl">
+<img 
           src="/logo.png" 
           alt="FinSight Logo" 
           className="h-10 w-15 object-contain"
-        />  
-              </div>
+        />                </div>
             </div>
 
-            {/* Title */}
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent mb-3">
+            <h1 className="text-7xl font-black mb-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-transparent drop-shadow-lg">
               FinSight
             </h1>
-
-            {/* Subtitle */}
-            <p className="text-slate-400 text-lg font-light mb-2">
-              Professional Financial Analysis Platform
-            </p>
-            <p className="text-slate-500 text-sm">
-              Unlock insights, drive decisions, maximize returns
-            </p>
+            <p className="text-cyan-400 text-sm font-mono tracking-widest mb-2">FUNDAMENTAL ANALYSIS ENGINE</p>
+            <p className="text-gray-400 text-sm">Powered by Advanced Financial Intelligence</p>
           </div>
 
-          {/* Form Card */}
-          <div className="bg-slate-800 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-slate-700 hover:border-slate-600 transition-colors duration-300">
-            <h2 className="text-2xl font-semibold text-white mb-2">Welcome</h2>
-            <p className="text-slate-400 text-sm mb-6">Enter your name to get started</p>
-
-            <div className="space-y-4">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+            <div className="relative bg-black border border-cyan-500/30 rounded-2xl p-8 space-y-6">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-3">Full Name</label>
+                <h2 className="text-2xl font-bold text-white mb-1">Begin Analysis</h2>
+                <p className="text-gray-400 text-sm">Enter your details to access fundamental financial insights</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono text-cyan-400 mb-3 tracking-wider">FULL NAME</label>
                 <input
                   type="text"
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleUserNameSubmit(e)}
-                  placeholder="Enter your full name"
-                  className="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all duration-200"
+                  placeholder="Enter your name"
+                  className="w-full px-4 py-3 bg-black border border-cyan-500/20 rounded-lg text-white placeholder-gray-600 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20 transition-all font-mono text-sm"
                 />
               </div>
 
               <button
                 onClick={handleUserNameSubmit}
                 disabled={!userName.trim()}
-                className={`w-full py-3 px-6 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 ${
+                className={`w-full py-3 px-6 rounded-lg font-mono font-bold text-sm tracking-wider transition-all duration-300 ${
                   userName.trim()
-                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:shadow-lg hover:shadow-cyan-500/50 cursor-pointer transform hover:scale-105'
-                    : 'bg-slate-700 text-slate-500 cursor-not-allowed opacity-50'
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black hover:shadow-lg hover:shadow-cyan-500/50 cursor-pointer transform hover:scale-105' 
+                    : 'bg-gray-800 text-gray-600 cursor-not-allowed opacity-50'
                 }`}
               >
-                <span>Continue</span>
-                <Send className="w-4 h-4" />
+                {userName.trim() ? 'ENTER PLATFORM' : 'WAITING FOR INPUT'}
               </button>
             </div>
           </div>
+
+          <p className="text-center text-gray-600 text-xs mt-6 font-mono">
+            100% Accurate Financial Data • Real-time Analysis • Enterprise Grade
+          </p>
         </div>
 
         <style jsx>{`
@@ -392,79 +366,98 @@ const FinancialAIAssistant = () => {
   }
 
   return (
-    <div className="h-screen bg-gray-50 text-gray-900 flex flex-col">
+    <div className="h-screen bg-black text-white flex flex-col relative overflow-hidden">
+      {/* Background grid */}
+      <div className="absolute inset-0 opacity-3 pointer-events-none">
+        <div style={{
+          backgroundImage: 'linear-gradient(0deg, transparent 24%, rgba(0, 255, 200, .1) 25%, rgba(0, 255, 200, .1) 26%, transparent 27%, transparent 74%, rgba(0, 255, 200, .1) 75%, rgba(0, 255, 200, .1) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 200, .1) 25%, rgba(0, 255, 200, .1) 26%, transparent 27%, transparent 74%, rgba(0, 255, 200, .1) 75%, rgba(0, 255, 200, .1) 76%, transparent 77%, transparent)',
+          backgroundSize: '50px 50px',
+          width: '100%',
+          height: '100%'
+        }}></div>
+      </div>
+
       {/* Header */}
-      <div className="bg-white border-b-2 border-gray-200 px-4 py-3 shadow-md">
+      <div className="relative z-40 border-b border-cyan-500/10 bg-black/50 backdrop-blur-xl px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-              <img 
+          <div className="flex items-center space-x-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-grey-500 to-white-600 rounded-lg flex items-center justify-center">
+<img 
           src="/logo.png" 
           alt="FinSight Logo" 
           className="h-10 w-15 object-contain"
-        />  
+        />              </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">FinSight</h1>
-              <p className="text-xs text-gray-600">Welcome, {userName}</p>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">FinSight</h1>
+              <p className="text-xs text-gray-500 font-mono">Welcome, {userName}</p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center space-x-2 bg-red-50 hover:bg-red-100 text-red-700 px-4 py-2 rounded-lg border-2 border-red-200 transition-all font-semibold text-sm"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Logout</span>
-          </button>
+          <div className="flex items-center space-x-3">
+            <div className="text-xs text-cyan-400 font-mono px-3 py-1 border border-cyan-500/30 rounded-full bg-cyan-500/5">
+              {queryCount} Queries
+            </div>
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="p-2 rounded-lg border border-cyan-500/20 hover:border-cyan-500/50 transition-all"
+            >
+              {isDarkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-300" />}
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center space-x-2 px-4 py-2 rounded-lg border border-red-500/20 hover:border-red-500/50 text-red-400 font-mono text-sm transition-all"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>EXIT</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Company Selector */}
-      <div className="bg-white border-b-2 border-gray-200 px-4 py-4 shadow-md">
-        <div className="max-w-7xl mx-auto">
-          <div className="space-y-3">
-            {/* Search and Filter Row */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 relative" ref={dropdownRef}>
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
+      {/* Main Content */}
+      <div className="flex-1 flex gap-6 px-6 py-4 overflow-hidden">
+        {/* Sidebar - Company Selection */}
+        <div className="w-80 flex flex-col gap-4 overflow-hidden">
+          <div className="border border-cyan-500/10 rounded-lg bg-black/50 backdrop-blur-xl p-4 overflow-y-auto flex-1 space-y-4">
+            <div className="space-y-2">
+              <p className="text-xs font-mono text-cyan-400 tracking-widest">ASSET SELECTION</p>
+              <div className="relative" ref={dropdownRef}>
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-600" />
                 <input
                   type="text"
-                  placeholder="Search by company, sector, or industry..."
+                  placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setShowCompanyDropdown(true)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                  className="w-full pl-10 pr-4 py-2 bg-black border border-cyan-500/20 rounded-lg text-white placeholder-gray-600 text-sm focus:border-cyan-400 focus:outline-none transition-all font-mono"
                 />
 
                 {showCompanyDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-black border border-cyan-500/20 rounded-lg shadow-2xl z-50 max-h-64 overflow-y-auto">
                     {isLoadingCompanies ? (
-                      <div className="p-4 text-center text-gray-500 flex items-center justify-center space-x-2">
+                      <div className="p-4 text-center text-gray-500 text-sm flex items-center justify-center space-x-2">
                         <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Loading companies...</span>
+                        <span>Loading...</span>
                       </div>
                     ) : filteredCompanies.length > 0 ? (
-                      <div>
-                        <div className="sticky top-0 bg-gray-50 p-2 border-b text-xs text-gray-600 font-semibold">
-                          {filteredCompanies.length} companies found
-                        </div>
+                      <div className="divide-y divide-cyan-500/10">
                         {filteredCompanies.map((company) => (
                           <div
-                            key={company.name}
+                            key={company.slug}
                             onClick={() => handleSelectCompany(company)}
-                            className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                            className="px-4 py-3 hover:bg-cyan-500/5 cursor-pointer transition-colors border-l-2 border-transparent hover:border-cyan-500 group"
                           >
-                            <div className="flex items-start space-x-3">
+                            <div className="flex items-center space-x-3">
                               <input
                                 type="checkbox"
-                                checked={selectedCompanies.some(c => c.name === company.name)}
+                                checked={selectedCompanies.some(c => c.slug === company.slug)}
                                 onChange={() => {}}
-                                className="w-4 h-4 text-blue-600 rounded cursor-pointer mt-0.5"
+                                className="w-4 h-4 cursor-pointer accent-cyan-500"
                               />
                               <div className="flex-1 min-w-0">
-                                <div className="text-sm font-semibold text-gray-900">{company.name}</div>
-                                <div className="text-xs text-gray-500 mt-0.5">{company.name}</div>
-                                <div className="text-xs text-gray-600 mt-0.5">
-                                  {company.sector && <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded mr-1">{company.sector}</span>}
-                                  {company.industry && <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded">{company.industry}</span>}
+                                <div className="text-sm font-mono text-cyan-300 font-semibold">{company.name}</div>
+                                <div className="text-xs text-gray-600 font-mono">{company.slug}</div>
+                                <div className="text-xs mt-1 space-x-1">
+                                  {company.sector && <span className="inline-block px-2 py-0.5 rounded text-cyan-400 border border-cyan-500/30 bg-cyan-500/5 text-xs">{company.sector}</span>}
                                 </div>
                               </div>
                             </div>
@@ -472,285 +465,160 @@ const FinancialAIAssistant = () => {
                         ))}
                       </div>
                     ) : (
-                      <div className="p-4 text-center text-gray-500 text-sm">No companies found</div>
+                      <div className="p-4 text-center text-gray-600 text-sm">No results</div>
                     )}
                   </div>
                 )}
-              </div>
-
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-lg border-2 border-gray-300 transition-all font-semibold text-sm"
-              >
-                <Filter className="w-4 h-4" />
-                <span>Filters</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-              </button>
-
-              <div className="text-xs bg-blue-100 text-blue-700 px-4 py-2.5 rounded-lg border-2 border-blue-300 font-semibold whitespace-nowrap">
-                {queryCount} queries
               </div>
             </div>
 
-            {/* Filters Panel */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-cyan-500/20 hover:border-cyan-500/50 text-sm text-cyan-400 font-mono transition-all"
+            >
+              <span>FILTERS</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
+
             {showFilters && (
-              <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-4 space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-2">Sector</label>
-                    <select
-                      value={selectedSector}
-                      onChange={(e) => setSelectedSector(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="">All Sectors</option>
-                      {sectors.map(sector => (
-                        <option key={sector} value={sector}>{sector}</option>
-                      ))}
-                    </select>
-                    {selectedSector && (
-                      <button
-                        onClick={() => handleSelectAllBySector(selectedSector)}
-                        className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-semibold"
-                      >
-                        + Select all in {selectedSector}
-                      </button>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-2">Industry</label>
-                    <select
-                      value={selectedIndustry}
-                      onChange={(e) => setSelectedIndustry(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="">All Industries</option>
-                      {industries.map(industry => (
-                        <option key={industry} value={industry}>{industry}</option>
-                      ))}
-                    </select>
-                    {selectedIndustry && (
-                      <button
-                        onClick={() => handleSelectAllByIndustry(selectedIndustry)}
-                        className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-semibold"
-                      >
-                        + Select all in {selectedIndustry}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {(selectedSector || selectedIndustry || searchQuery) && (
-                  <button
-                    onClick={clearFilters}
-                    className="text-xs text-red-600 hover:text-red-700 font-semibold"
+              <div className="space-y-3 border-t border-cyan-500/10 pt-3">
+                <div>
+                  <label className="text-xs font-mono text-gray-500 mb-2 block">Sector</label>
+                  <select
+                    value={selectedSector}
+                    onChange={(e) => setSelectedSector(e.target.value)}
+                    className="w-full px-3 py-2 bg-black border border-cyan-500/20 rounded-lg text-sm text-white focus:border-cyan-400 outline-none font-mono"
                   >
-                    Clear all filters
-                  </button>
-                )}
+                    <option value="">All</option>
+                    {sectors.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-mono text-gray-500 mb-2 block">Industry</label>
+                  <select
+                    value={selectedIndustry}
+                    onChange={(e) => setSelectedIndustry(e.target.value)}
+                    className="w-full px-3 py-2 bg-black border border-cyan-500/20 rounded-lg text-sm text-white focus:border-cyan-400 outline-none font-mono"
+                  >
+                    <option value="">All</option>
+                    {industries.map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
+                </div>
               </div>
             )}
 
-            {/* Selected Companies */}
             {selectedCompanies.length > 0 && (
-              <div className="flex flex-wrap gap-2 px-1">
-                <span className="text-xs font-semibold text-gray-600 self-center">Selected ({selectedCompanies.length}):</span>
-                {selectedCompanies.map((company) => (
-                  <div
-                    key={company.name}
-                    className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-md"
-                  >
-                    <span>{company.name || company.name}</span>
+              <div className="border-t border-cyan-500/10 pt-4 space-y-2">
+                <p className="text-xs font-mono text-cyan-400 tracking-widest">SELECTED ASSETS ({selectedCompanies.length})</p>
+                {selectedCompanies.map(c => (
+                  <div key={c.slug} className="flex items-center justify-between px-3 py-2 bg-cyan-500/5 border border-cyan-500/20 rounded-lg group hover:border-cyan-500/50 transition-all">
+                    <span className="text-sm font-mono text-cyan-300">{c.name}</span>
                     <button
-                      onClick={() => handleRemoveCompany(company.name)}
-                      className="hover:opacity-75 transition-opacity"
+                      onClick={() => handleRemoveCompany(c.slug)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-4 h-4 text-red-400 hover:text-red-300" />
                     </button>
                   </div>
                 ))}
-                <button
-                  onClick={() => setSelectedCompanies([])}
-                  className="text-xs text-red-600 hover:text-red-700 font-semibold self-center ml-2"
-                >
-                  Clear all
-                </button>
-              </div>
-            )}
-
-            {validationError && (
-              <div className="p-3 bg-red-50 border-2 border-red-300 rounded-lg text-sm text-red-700 font-semibold">
-                {validationError}
-              </div>
-            )}
-
-            {selectedCompanies.length === 0 && (
-              <div className="p-3 bg-yellow-50 border-2 border-yellow-300 rounded-lg text-sm text-yellow-700 font-semibold">
-                Please select at least one company to start analyzing
               </div>
             )}
           </div>
         </div>
-      </div>
 
-      {/* Chat Area */}
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full max-w-7xl mx-auto px-4 py-3 flex flex-col">
-          <div className="flex-1 bg-white rounded-xl border-2 border-gray-200 shadow-lg overflow-hidden flex flex-col">
-            <div
-              ref={chatContainerRef}
-              className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
-            >
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+          <div className="flex-1 border border-cyan-500/10 rounded-lg bg-black/50 backdrop-blur-xl overflow-hidden flex flex-col">
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {messages.length === 0 ? (
-                <div className="text-center text-gray-600 py-12 flex items-center justify-center h-full">
-                  <div className="bg-white p-8 rounded-lg max-w-2xl border-2 border-gray-200 shadow-md">
-                    <Bot className="w-16 h-16 mx-auto mb-4 text-blue-600" />
-                    <p className="text-2xl mb-3 font-bold text-gray-900">Ready to Analyze</p>
-                    <p className="text-base mb-6 text-gray-600">Select companies above and ask about their financial metrics</p>
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center space-y-4">
+                    <div className="flex justify-center mb-4">
+                      <Activity className="w-12 h-12 text-cyan-500 animate-pulse" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white">Ready for Analysis</h3>
+                    <p className="text-gray-500 font-mono text-sm">Select companies and ask fundamental questions</p>
                     {selectedCompanies.length > 0 && (
-                      <div className="text-sm mb-4 text-blue-600 font-semibold">
-                        Analyzing: <span className="text-blue-700">{selectedCompanies.map(c => c.name || c.name).join(', ')}</span>
-                      </div>
+                      <p className="text-cyan-400 text-xs font-mono">Analyzing: {selectedCompanies.map(c => c.name).join(', ')}</p>
                     )}
                   </div>
                 </div>
               ) : (
                 messages.map((message) => (
-                  <div key={message.id} className="space-y-2">
-                    {message.type === 'user' ? (
-                      <div className="flex justify-end">
-                        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl rounded-tr-none px-5 py-3 max-w-2xl shadow-md">
-                          <p className="leading-relaxed font-medium">{message.content}</p>
-                          {message.selectedCompanies && (
-                            <p className="text-xs text-blue-100 mt-2 font-semibold">
-                              Companies: {message.selectedCompanies.join(', ')}
-                            </p>
-                          )}
-                          {message.timestamp && (
-                            <p className="text-xs text-blue-200 mt-1">{formatTime(message.timestamp)}</p>
+                  <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in duration-300`}>
+                    <div className={`max-w-2xl ${
+                      message.type === 'user'
+                        ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg rounded-tr-none'
+                        : 'bg-black border border-cyan-500/20 text-gray-100 rounded-lg rounded-tl-none'
+                    } px-6 py-4`}>
+                      {message.type === 'ai' && (
+                        <div className="flex items-center space-x-2 mb-3 pb-3 border-b border-cyan-500/10">
+                          <Sparkles className="w-4 h-4 text-cyan-400" />
+                          <span className="text-xs font-mono text-cyan-400 tracking-wider">
+                            {message.status === 'streaming' ? 'ANALYZING' : 'RESULTS'}
+                          </span>
+                          {message.status === 'streaming' && (
+                            <div className="flex space-x-1 ml-2">
+                              <div className="w-1 h-1 bg-cyan-400 rounded-full animate-bounce"></div>
+                              <div className="w-1 h-1 bg-cyan-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                              <div className="w-1 h-1 bg-cyan-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                            </div>
                           )}
                         </div>
+                      )}
+                      <div className={`text-sm font-mono leading-relaxed ${message.type === 'user' ? 'text-white' : 'text-gray-200'}`}>
+                        <Markdown remarkPlugins={[remarkGfm]}>
+                          {message.content}
+                        </Markdown>
                       </div>
-                    ) : (
-                      <div className="flex justify-start">
-                        <div className="bg-white text-gray-900 rounded-2xl rounded-tl-none px-5 py-3 max-w-4xl border-2 border-gray-200 shadow-md">
-                          <div className="flex items-center space-x-2 mb-3">
-                            <Building2 className="w-4 h-4 text-blue-600" />
-                            <span className="text-sm font-bold text-gray-700">
-                              {message.status === 'streaming' ? 'Streaming...' : message.status || 'Response'}
-                            </span>
-                            {message.timestamp && message.status === 'completed' && (
-                              <span className="text-xs text-gray-500">
-                                • {formatTime(message.timestamp)}
-                              </span>
-                            )}
-                            {message.status === 'streaming' && (
-                              <div className="flex space-x-1 ml-2">
-                                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div className="prose prose-sm prose-slate max-w-none">
-                            <Markdown 
-                              remarkPlugins={[remarkGfm]}
-                              components={{
-                                h1: ({node, ...props}) => <h1 className="text-2xl font-bold mt-4 mb-2 text-gray-900" {...props} />,
-                                h2: ({node, ...props}) => <h2 className="text-xl font-bold mt-4 mb-2 text-gray-800" {...props} />,
-                                h3: ({node, ...props}) => <h3 className="text-lg font-bold mt-3 mb-2 text-gray-800" {...props} />,
-                                p: ({node, ...props}) => <p className="mb-3 text-gray-700 leading-relaxed" {...props} />,
-                                ul: ({node, ...props}) => <ul className="list-disc ml-6 mb-3 space-y-1" {...props} />,
-                                ol: ({node, ...props}) => <ol className="list-decimal ml-6 mb-3 space-y-1" {...props} />,
-                                li: ({node, ...props}) => <li className="text-gray-700" {...props} />,
-                                strong: ({node, ...props}) => <strong className="font-bold text-gray-900" {...props} />,
-                                em: ({node, ...props}) => <em className="italic text-gray-700" {...props} />,
-                                table: ({node, ...props}) => <table className="min-w-full border-collapse border border-gray-300 my-3" {...props} />,
-                                thead: ({node, ...props}) => <thead className="bg-gray-100" {...props} />,
-                                th: ({node, ...props}) => <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-900" {...props} />,
-                                td: ({node, ...props}) => <td className="border border-gray-300 px-4 py-2 text-gray-700" {...props} />,
-                                code: ({node, inline, ...props}) => 
-                                  inline ? 
-                                    <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-red-600" {...props} /> :
-                                    <code className="block bg-gray-100 p-3 rounded text-sm font-mono overflow-x-auto" {...props} />,
-                                blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-600 my-3" {...props} />,
-                              }}
-                            >
-                              {message.content || 'Starting analysis...'}
-                            </Markdown>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                    </div>
                   </div>
                 ))
               )}
               <div ref={messagesEndRef} />
             </div>
-              
-            {/* Input Area */}
-            <div className="border-t-2 border-gray-200 bg-white px-4 py-4">
+
+            {/* Input */}
+            <div className="border-t border-cyan-500/10 bg-black/50 p-4">
               <div className="space-y-3">
                 <div className="flex gap-3">
-                  <div className="flex-1">
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      placeholder={selectedCompanies.length === 0 ? "Select companies first..." : "Ask about the selected companies..."}
-                      onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleSubmit(e)}
-                      className={`w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 font-medium transition-all ${
-                        selectedCompanies.length === 0 || isLoading ? 'opacity-50 cursor-not-allowed bg-gray-100' : 'bg-white'
-                      }`}
-                      disabled={selectedCompanies.length === 0 || isLoading}
-                    />
-                  </div>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    placeholder={selectedCompanies.length === 0 ? "Select companies first..." : "Ask about fundamentals..."}
+                    onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleSubmit(e)}
+                    className="flex-1 px-4 py-3 bg-black border border-cyan-500/20 rounded-lg text-white placeholder-gray-600 text-sm focus:border-cyan-400 focus:outline-none font-mono transition-all disabled:opacity-50"
+                    disabled={selectedCompanies.length === 0 || isLoading}
+                  />
                   <button
                     onClick={handleSubmit}
                     disabled={selectedCompanies.length === 0 || isLoading}
-                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-400 text-white rounded-lg px-6 py-3 flex items-center space-x-2 transition-all font-bold shadow-md hover:shadow-lg"
+                    className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-mono font-bold text-sm hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 transition-all"
                   >
-                    {isLoading ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
-                    <span className="hidden sm:inline">Send</span>
+                    {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   </button>
                 </div>
-
+                
                 {selectedCompanies.length > 0 && !isLoading && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <button
-                      onClick={() => {
-                        if (inputRef.current) {
-                          inputRef.current.value = `Compare ${selectedCompanies.map(c => c.name).join(' and ')} quarterly results`;
-                        }
-                      }}
-                      className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-100 border-2 border-blue-200 font-semibold text-xs transition-all"
+                      onClick={() => inputRef.current && (inputRef.current.value = `Compare ${selectedCompanies.map(c => c.name).join(' vs ')} revenue growth`)}
+                      className="px-3 py-1 text-xs border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
                     >
-                      📊 Compare
+                      Revenue Compare
                     </button>
                     <button
-                      onClick={() => {
-                        if (inputRef.current) {
-                          inputRef.current.value = `Show profit margins for ${selectedCompanies.map(c => c.name).join(', ')}`;
-                        }
-                      }}
-                      className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-100 border-2 border-blue-200 font-semibold text-xs transition-all"
+                      onClick={() => inputRef.current && (inputRef.current.value = `What are the P/E ratios and profit margins for ${selectedCompanies.map(c => c.name).join(', ')}?`)}
+                      className="px-3 py-1 text-xs border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
                     >
-                      💰 Margins
+                      Valuation Metrics
                     </button>
                     <button
-                      onClick={() => {
-                        if (inputRef.current) {
-                          inputRef.current.value = `What is YoY growth for ${selectedCompanies.map(c => c.name).join(', ')}?`;
-                        }
-                      }}
-                      className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-100 border-2 border-blue-200 font-semibold text-xs transition-all"
+                      onClick={() => inputRef.current && (inputRef.current.value = `Analyze debt-to-equity and cash flow trends for ${selectedCompanies.map(c => c.name).join(', ')}`)}
+                      className="px-3 py-1 text-xs border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
                     >
-                      📈 YoY Growth
+                      Financial Health
                     </button>
                   </div>
                 )}
@@ -759,6 +627,24 @@ const FinancialAIAssistant = () => {
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes blob {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };
