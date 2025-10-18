@@ -591,7 +591,7 @@ const FinancialAIAssistant = () => {
                           )}
                         </div>
                       )}
-                      <div className={`text-sm font-mono leading-relaxed ${message.type === 'user' ? 'text-white' : 'text-gray-200'}`}>
+                      <div className={`text-sm font-mono leading-relaxed ${message.type === 'user' ? 'text-white' : 'text-gray-200'} markdown-content`}>
                         <Markdown remarkPlugins={[remarkGfm]}>
                           {message.content}
                         </Markdown>
@@ -675,6 +675,89 @@ const FinancialAIAssistant = () => {
         }
         .animate-in {
           animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
+      <style>{`
+        .markdown-content table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 1rem 0;
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid rgba(0, 255, 200, 0.2);
+        }
+        .markdown-content th {
+          background: rgba(0, 255, 200, 0.1);
+          color: #22d3ee;
+          font-weight: 600;
+          padding: 0.75rem;
+          text-align: left;
+          border: 1px solid rgba(0, 255, 200, 0.2);
+          font-size: 0.875rem;
+        }
+        .markdown-content td {
+          padding: 0.75rem;
+          border: 1px solid rgba(0, 255, 200, 0.1);
+          color: #e5e7eb;
+          font-size: 0.875rem;
+        }
+        .markdown-content tr:hover {
+          background: rgba(0, 255, 200, 0.05);
+        }
+        .markdown-content h1, .markdown-content h2, .markdown-content h3 {
+          color: #22d3ee;
+          margin-top: 1.5rem;
+          margin-bottom: 0.75rem;
+          font-weight: 700;
+        }
+        .markdown-content h1 {
+          font-size: 1.5rem;
+        }
+        .markdown-content h2 {
+          font-size: 1.25rem;
+        }
+        .markdown-content h3 {
+          font-size: 1.1rem;
+        }
+        .markdown-content p {
+          margin-bottom: 1rem;
+          line-height: 1.6;
+        }
+        .markdown-content ul, .markdown-content ol {
+          margin-left: 1.5rem;
+          margin-bottom: 1rem;
+        }
+        .markdown-content li {
+          margin-bottom: 0.5rem;
+        }
+        .markdown-content code {
+          background: rgba(0, 255, 200, 0.1);
+          padding: 0.2rem 0.4rem;
+          border-radius: 0.25rem;
+          color: #22d3ee;
+          font-size: 0.875rem;
+        }
+        .markdown-content pre {
+          background: rgba(0, 0, 0, 0.5);
+          padding: 1rem;
+          border-radius: 0.5rem;
+          overflow-x: auto;
+          border: 1px solid rgba(0, 255, 200, 0.2);
+          margin: 1rem 0;
+        }
+        .markdown-content pre code {
+          background: none;
+          padding: 0;
+        }
+        .markdown-content strong {
+          color: #22d3ee;
+          font-weight: 600;
+        }
+        .markdown-content blockquote {
+          border-left: 4px solid rgba(0, 255, 200, 0.5);
+          padding-left: 1rem;
+          margin: 1rem 0;
+          color: #9ca3af;
+          font-style: italic;
         }
       `}</style>
     </div>
