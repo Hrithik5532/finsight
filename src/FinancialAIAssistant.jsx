@@ -461,32 +461,40 @@ const FinancialAIAssistant = () => {
                       </div>
                     ) : filteredCompanies.length > 0 ? (
                       <div className="divide-y divide-cyan-500/10">
-                        {filteredCompanies.map((company) => (
-                          <div
-                            key={company.slug}
-                            onClick={() => {
-                              handleSelectCompany(company);
-                              setSidebarOpen(false);
-                            }}
-                            className="px-4 py-3 hover:bg-cyan-500/5 cursor-pointer transition-colors border-l-2 border-transparent hover:border-cyan-500 group"
-                          >
-                            <div className="flex items-center space-x-3">
-                              <input
-                                type="checkbox"
-                                checked={selectedCompanies.some(c => c.slug === company.slug)}
-                                onChange={() => {}}
-                                className="w-4 h-4 cursor-pointer accent-cyan-500"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="text-sm font-mono text-cyan-300 font-semibold">{company.name}</div>
-                                <div className="text-xs text-gray-600 font-mono">{company.slug}</div>
-                                <div className="text-xs mt-1 space-x-1">
-                                  {company.sector && <span className="inline-block px-2 py-0.5 rounded text-cyan-400 border border-cyan-500/30 bg-cyan-500/5 text-xs">{company.sector}</span>}
+                        {filteredCompanies.map((company) => {
+                          const isSelected = selectedCompanies.some(c => c.slug === company.slug);
+                          return (
+                            <div
+                              key={company.slug}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectCompany(company);
+                              }}
+                              className="px-4 py-3 hover:bg-cyan-500/5 cursor-pointer transition-colors border-l-2 border-transparent hover:border-cyan-500 group"
+                            >
+                              <div className="flex items-center space-x-3">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                  className="w-4 h-4 cursor-pointer accent-cyan-500"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-mono text-cyan-300 font-semibold">{company.name}</div>
+                                  <div className="text-xs text-gray-600 font-mono">{company.slug}</div>
+                                  <div className="text-xs mt-1 space-x-1">
+                                    {company.sector && <span className="inline-block px-2 py-0.5 rounded text-cyan-400 border border-cyan-500/30 bg-cyan-500/5 text-xs">{company.sector}</span>}
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="p-4 text-center text-gray-600 text-sm">No results</div>
