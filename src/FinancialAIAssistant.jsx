@@ -57,7 +57,7 @@ const FinancialAIAssistant = () => {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(company =>
         company.name?.toLowerCase().includes(query) ||
-        company.slug?.toLowerCase().includes(query) ||
+        company.name?.toLowerCase().includes(query) ||
         company.sector?.toLowerCase().includes(query) ||
         company.industry?.toLowerCase().includes(query)
       );
@@ -78,7 +78,12 @@ const FinancialAIAssistant = () => {
       const response = await fetch(`${API_BASE_URL}/companies/search`);
       const data = await response.json();
       if (data.status === 'success' && data.companies) {
-        setCompanies(data.companies);
+        // Filter out companies with undefined or null slugs
+        const validCompanies = data.companies.filter(c => c.name && c.name.trim());
+        console.log('Total companies from API:', data.companies.length);
+        console.log('Valid companies (with slugs):', validCompanies.length);
+        console.log('Sample company:', validCompanies[0]);
+        setCompanies(validCompanies);
       }
     } catch (error) {
       console.error('Error loading companies:', error);
@@ -99,19 +104,26 @@ const FinancialAIAssistant = () => {
   };
 
   const handleSelectCompany = (company) => {
+    console.log('Selecting company:', company.name);
     setSelectedCompanies(prev => {
-      const isAlreadySelected = prev.find(c => c.slug === company.slug);
+      const isAlreadySelected = prev.find(c => c.name === company.name);
+      console.log('Already selected?', isAlreadySelected);
+      console.log('Current selected:', prev.map(c => c.name));
       if (isAlreadySelected) {
-        return prev.filter(c => c.slug !== company.slug);
+        const newList = prev.filter(c => c.name !== company.name);
+        console.log('Removing. New list:', newList.map(c => c.name));
+        return newList;
       } else {
-        return [...prev, company];
+        const newList = [...prev, company];
+        console.log('Adding. New list:', newList.map(c => c.name));
+        return newList;
       }
     });
     setValidationError('');
   };
 
   const handleRemoveCompany = (companySlug) => {
-    setSelectedCompanies(prev => prev.filter(c => c.slug !== companySlug));
+    setSelectedCompanies(prev => prev.filter(c => c.name !== companySlug));
   };
 
   const handleSelectAllBySector = (sector) => {
@@ -119,7 +131,7 @@ const FinancialAIAssistant = () => {
     setSelectedCompanies(prev => {
       const newSelection = [...prev];
       companiesInSector.forEach(company => {
-        if (!newSelection.find(c => c.slug === company.slug)) {
+        if (!newSelection.find(c => c.name === company.name)) {
           newSelection.push(company);
         }
       });
@@ -132,7 +144,7 @@ const FinancialAIAssistant = () => {
     setSelectedCompanies(prev => {
       const newSelection = [...prev];
       companiesInIndustry.forEach(company => {
-        if (!newSelection.find(c => c.slug === company.slug)) {
+        if (!newSelection.find(c => c.name === company.name)) {
           newSelection.push(company);
         }
       });
@@ -353,7 +365,7 @@ const FinancialAIAssistant = () => {
           </p>
         </div>
 
-        <style jsx>{`
+        <style>{`
           @keyframes blob {
             0%, 100% { transform: translate(0, 0) scale(1); }
             33% { transform: translate(30px, -50px) scale(1.1); }
@@ -461,32 +473,36 @@ const FinancialAIAssistant = () => {
                       </div>
                     ) : filteredCompanies.length > 0 ? (
                       <div className="divide-y divide-cyan-500/10">
-                        {filteredCompanies.map((company) => {
-                          const isSelected = selectedCompanies.some(c => c.slug === company.slug);
+                        {filteredCompanies.map((company, index) => {
+                          if (!company.name) {
+                            console.warn('Company without slug:', company);
+                            return null;
+                          }
+                          const isChecked = selectedCompanies.some(c => c.name === company.name);
                           return (
                             <div
-                              key={company.slug}
-                              onClick={(e) => {
-                                e.stopPropagation();
+                              key={company.name || `company-${index}`}
+                              onClick={() => {
+                                console.log('Clicked:', company.name);
                                 handleSelectCompany(company);
                               }}
                               className="px-4 py-3 hover:bg-cyan-500/5 cursor-pointer transition-colors border-l-2 border-transparent hover:border-cyan-500 group"
                             >
                               <div className="flex items-center space-x-3">
-                                <input
-                                  type="checkbox"
-                                  checked={isSelected}
-                                  onChange={(e) => {
-                                    e.stopPropagation();
-                                  }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                  }}
-                                  className="w-4 h-4 cursor-pointer accent-cyan-500"
-                                />
+                                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
+                                  isChecked 
+                                    ? 'bg-cyan-500 border-cyan-500' 
+                                    : 'border-gray-600 bg-transparent'
+                                }`}>
+                                  {isChecked && (
+                                    <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                  )}
+                                </div>
                                 <div className="flex-1 min-w-0">
-                                  <div className="text-sm font-mono text-cyan-300 font-semibold">{company.name}</div>
-                                  <div className="text-xs text-gray-600 font-mono">{company.slug}</div>
+                                  <div className="text-sm font-mono text-cyan-300 font-semibold">{company.name || company.name}</div>
+                                  <div className="text-xs text-gray-600 font-mono">{company.name}</div>
                                   <div className="text-xs mt-1 space-x-1">
                                     {company.sector && <span className="inline-block px-2 py-0.5 rounded text-cyan-400 border border-cyan-500/30 bg-cyan-500/5 text-xs">{company.sector}</span>}
                                   </div>
@@ -541,13 +557,27 @@ const FinancialAIAssistant = () => {
 
             {selectedCompanies.length > 0 && (
               <div className="border-t border-cyan-500/10 pt-4 space-y-2">
-                <p className="text-xs font-mono text-cyan-400 tracking-widest">SELECTED ASSETS ({selectedCompanies.length})</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-mono text-cyan-400 tracking-widest">SELECTED ASSETS ({selectedCompanies.length})</p>
+                  <button
+                    onClick={() => setSelectedCompanies([])}
+                    className="text-xs text-red-400 hover:text-red-300 font-mono"
+                  >
+                    Clear All
+                  </button>
+                </div>
                 {selectedCompanies.map(c => (
-                  <div key={c.slug} className="flex items-center justify-between px-3 py-2 bg-cyan-500/5 border border-cyan-500/20 rounded-lg group hover:border-cyan-500/50 transition-all">
-                    <span className="text-sm font-mono text-cyan-300">{c.name}</span>
+                  <div key={c.name} className="flex items-center justify-between px-3 py-2 bg-cyan-500/5 border border-cyan-500/20 rounded-lg group hover:border-cyan-500/50 transition-all">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-mono text-cyan-300">{c.name}</div>
+                      <div className="text-xs text-gray-600 font-mono">{c.name}</div>
+                    </div>
                     <button
-                      onClick={() => handleRemoveCompany(c.slug)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveCompany(c.name);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity ml-2"
                     >
                       <X className="w-4 h-4 text-red-400 hover:text-red-300" />
                     </button>
@@ -668,7 +698,7 @@ const FinancialAIAssistant = () => {
         {sidebarOpen ? <X className="w-6 h-6" /> : <Filter className="w-6 h-6" />}
       </button>
 
-      <style jsx>{`
+              <style>{`
         @keyframes blob {
           0%, 100% { transform: translate(0, 0) scale(1); }
           33% { transform: translate(30px, -50px) scale(1.1); }
