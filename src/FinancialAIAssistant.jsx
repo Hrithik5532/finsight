@@ -18,7 +18,6 @@ const FinancialAIAssistant = () => {
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [validationError, setValidationError] = useState('');
   
-  // New filter states
   const [selectedSector, setSelectedSector] = useState('');
   const [selectedIndustry, setSelectedIndustry] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -32,7 +31,6 @@ const FinancialAIAssistant = () => {
     return messages.filter(m => m.type === 'user').length;
   }, [messages]);
 
-  // Get unique sectors and industries
   const sectors = useMemo(() => {
     const uniqueSectors = [...new Set(companies.map(c => c.sector).filter(Boolean))];
     return uniqueSectors.sort();
@@ -43,25 +41,22 @@ const FinancialAIAssistant = () => {
     return uniqueIndustries.sort();
   }, [companies]);
 
-  // Filtered companies based on search, sector, and industry
   const filteredCompanies = useMemo(() => {
     let filtered = companies;
 
-    // Filter by sector
     if (selectedSector) {
       filtered = filtered.filter(c => c.sector === selectedSector);
     }
 
-    // Filter by industry
     if (selectedIndustry) {
       filtered = filtered.filter(c => c.industry === selectedIndustry);
     }
 
-    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(company =>
         company.name?.toLowerCase().includes(query) ||
+        company.slug?.toLowerCase().includes(query) ||
         company.sector?.toLowerCase().includes(query) ||
         company.industry?.toLowerCase().includes(query)
       );
@@ -104,9 +99,9 @@ const FinancialAIAssistant = () => {
 
   const handleSelectCompany = (company) => {
     setSelectedCompanies(prev => {
-      const isAlreadySelected = prev.find(c => c.name === company.name);
+      const isAlreadySelected = prev.find(c => c.slug === company.slug);
       if (isAlreadySelected) {
-        return prev.filter(c => c.name !== company.name);
+        return prev.filter(c => c.slug !== company.slug);
       } else {
         return [...prev, company];
       }
@@ -114,8 +109,8 @@ const FinancialAIAssistant = () => {
     setValidationError('');
   };
 
-  const handleRemoveCompany = (companyName) => {
-    setSelectedCompanies(prev => prev.filter(c => c.name !== companyName));
+  const handleRemoveCompany = (companySlug) => {
+    setSelectedCompanies(prev => prev.filter(c => c.slug !== companySlug));
   };
 
   const handleSelectAllBySector = (sector) => {
@@ -123,7 +118,7 @@ const FinancialAIAssistant = () => {
     setSelectedCompanies(prev => {
       const newSelection = [...prev];
       companiesInSector.forEach(company => {
-        if (!newSelection.find(c => c.name === company.name)) {
+        if (!newSelection.find(c => c.slug === company.slug)) {
           newSelection.push(company);
         }
       });
@@ -137,7 +132,7 @@ const FinancialAIAssistant = () => {
     setSelectedCompanies(prev => {
       const newSelection = [...prev];
       companiesInIndustry.forEach(company => {
-        if (!newSelection.find(c => c.name === company.name)) {
+        if (!newSelection.find(c => c.slug === company.slug)) {
           newSelection.push(company);
         }
       });
@@ -186,7 +181,7 @@ const FinancialAIAssistant = () => {
       content: userQuery,
       id: `user-${Date.now()}`,
       timestamp: new Date(),
-      selectedCompanies: selectedCompanies.map(c => c.name)
+      selectedCompanies: selectedCompanies.map(c => c.name || c.slug)
     };
     setMessages(prev => [...prev, userMessage]);
 
@@ -209,7 +204,7 @@ const FinancialAIAssistant = () => {
         body: JSON.stringify({
           query: userQuery,
           user_name: userName,
-          companies: selectedCompanies.map(c => c.name)
+          companies: selectedCompanies.map(c => c.slug)  // ← Send slug to API
         }),
       });
 
@@ -367,7 +362,7 @@ const FinancialAIAssistant = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
                 <input
                   type="text"
-                  placeholder="🔍 Search by company, sector, or industry..."
+                  placeholder="Search by company, sector, or industry..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setShowCompanyDropdown(true)}
@@ -388,19 +383,20 @@ const FinancialAIAssistant = () => {
                         </div>
                         {filteredCompanies.map((company) => (
                           <div
-                            key={company.name}
+                            key={company.slug}
                             onClick={() => handleSelectCompany(company)}
                             className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
                           >
                             <div className="flex items-start space-x-3">
                               <input
                                 type="checkbox"
-                                checked={selectedCompanies.some(c => c.name === company.name)}
+                                checked={selectedCompanies.some(c => c.slug === company.slug)}
                                 onChange={() => {}}
                                 className="w-4 h-4 text-blue-600 rounded cursor-pointer mt-0.5"
                               />
                               <div className="flex-1 min-w-0">
                                 <div className="text-sm font-semibold text-gray-900">{company.name}</div>
+                                <div className="text-xs text-gray-500 mt-0.5">{company.slug}</div>
                                 <div className="text-xs text-gray-600 mt-0.5">
                                   {company.sector && <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded mr-1">{company.sector}</span>}
                                   {company.industry && <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded">{company.industry}</span>}
@@ -499,12 +495,12 @@ const FinancialAIAssistant = () => {
                 <span className="text-xs font-semibold text-gray-600 self-center">Selected ({selectedCompanies.length}):</span>
                 {selectedCompanies.map((company) => (
                   <div
-                    key={company.name}
+                    key={company.slug}
                     className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-md"
                   >
-                    <span>{company.name}</span>
+                    <span>{company.name || company.slug}</span>
                     <button
-                      onClick={() => handleRemoveCompany(company.name)}
+                      onClick={() => handleRemoveCompany(company.slug)}
                       className="hover:opacity-75 transition-opacity"
                     >
                       <X className="w-3.5 h-3.5" />
@@ -522,13 +518,13 @@ const FinancialAIAssistant = () => {
 
             {validationError && (
               <div className="p-3 bg-red-50 border-2 border-red-300 rounded-lg text-sm text-red-700 font-semibold">
-                ⚠️ {validationError}
+                {validationError}
               </div>
             )}
 
             {selectedCompanies.length === 0 && (
               <div className="p-3 bg-yellow-50 border-2 border-yellow-300 rounded-lg text-sm text-yellow-700 font-semibold">
-                📌 Please select at least one company to start analyzing
+                Please select at least one company to start analyzing
               </div>
             )}
           </div>
@@ -551,7 +547,7 @@ const FinancialAIAssistant = () => {
                     <p className="text-base mb-6 text-gray-600">Select companies above and ask about their financial metrics</p>
                     {selectedCompanies.length > 0 && (
                       <div className="text-sm mb-4 text-blue-600 font-semibold">
-                        Analyzing: <span className="text-blue-700">{selectedCompanies.map(c => c.name).join(', ')}</span>
+                        Analyzing: <span className="text-blue-700">{selectedCompanies.map(c => c.name || c.slug).join(', ')}</span>
                       </div>
                     )}
                   </div>
@@ -631,7 +627,7 @@ const FinancialAIAssistant = () => {
               <div ref={messagesEndRef} />
             </div>
               
-              {/* Input Area */}
+            {/* Input Area */}
             <div className="border-t-2 border-gray-200 bg-white px-4 py-4">
               <div className="space-y-3">
                 <div className="flex gap-3">
