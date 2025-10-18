@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 const FinancialAIAssistant = () => {
   const API_BASE_URL = 'https://finsight.tatvahitech.com';
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const [userName, setUserName] = useState('');
   const [isUserNameSet, setIsUserNameSet] = useState(false);
@@ -298,11 +299,12 @@ const FinancialAIAssistant = () => {
             <div className="flex justify-center mb-8 relative">
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl blur-xl opacity-50 animate-pulse"></div>
               <div className="relative bg-gradient-to-br from-cyan-500 to-black-600 rounded-xl p-4 shadow-2xl">
-<img 
-          src="/logo.png" 
-          alt="FinSight Logo" 
-          className="h-10 w-15 object-contain"
-        />                </div>
+                <img 
+                  src="/logo.png" 
+                  alt="FinSight Logo" 
+                  className="h-10 w-15 object-contain"
+                />                
+              </div>
             </div>
 
             <h1 className="text-7xl font-black mb-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-transparent drop-shadow-lg">
@@ -381,15 +383,16 @@ const FinancialAIAssistant = () => {
       <div className="relative z-40 border-b border-cyan-500/10 bg-black/50 backdrop-blur-xl px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-grey-500 to-white-600 rounded-lg flex items-center justify-center">
-<img 
-          src="/logo.png" 
-          alt="FinSight Logo" 
-          className="h-10 w-15 object-contain"
-        />              </div>
+            <div className="relative bg-gradient-to-br to-black-600 rounded-xl p-4 shadow-2xl">
+                <img 
+                  src="/logo.png" 
+                  alt="FinSight Logo" 
+                  className="h-10 w-15 object-contain"
+                />                
+              </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">FinSight</h1>
-              <p className="text-xs text-gray-500 font-mono">Welcome, {userName}</p>
+              <p className="text-xs text-gray-500 font-mono">{userName}</p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -414,10 +417,28 @@ const FinancialAIAssistant = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex gap-6 px-6 py-4 overflow-hidden">
+      <div className="flex-1 flex gap-4 px-4 md:px-6 py-4 overflow-hidden">
         {/* Sidebar - Company Selection */}
-        <div className="w-80 flex flex-col gap-4 overflow-hidden">
-          <div className="border border-cyan-500/10 rounded-lg bg-black/50 backdrop-blur-xl p-4 overflow-y-auto flex-1 space-y-4">
+        <div className={`fixed md:static inset-0 md:inset-auto w-full md:w-80 h-full md:h-auto flex flex-col gap-4 overflow-hidden z-50 md:z-auto transition-all duration-300 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}>
+          {/* Sidebar Overlay for mobile */}
+          {sidebarOpen && (
+            <div 
+              className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+              onClick={() => setSidebarOpen(false)}
+            ></div>
+          )}
+
+          <div className="relative z-50 border border-cyan-500/10 rounded-lg bg-black/50 backdrop-blur-xl p-4 overflow-y-auto flex-1 space-y-4 md:rounded-lg">
+            {/* Close Button - Mobile Only */}
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden absolute top-4 right-4 p-2 hover:bg-cyan-500/10 rounded transition-all"
+            >
+              <X className="w-5 h-5 text-cyan-400" />
+            </button>
+
             <div className="space-y-2">
               <p className="text-xs font-mono text-cyan-400 tracking-widest">ASSET SELECTION</p>
               <div className="relative" ref={dropdownRef}>
@@ -443,7 +464,10 @@ const FinancialAIAssistant = () => {
                         {filteredCompanies.map((company) => (
                           <div
                             key={company.slug}
-                            onClick={() => handleSelectCompany(company)}
+                            onClick={() => {
+                              handleSelectCompany(company);
+                              setSidebarOpen(false);
+                            }}
                             className="px-4 py-3 hover:bg-cyan-500/5 cursor-pointer transition-colors border-l-2 border-transparent hover:border-cyan-500 group"
                           >
                             <div className="flex items-center space-x-3">
@@ -527,10 +551,10 @@ const FinancialAIAssistant = () => {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+        <div className="flex-1 flex flex-col gap-4 overflow-hidden min-w-0">
           <div className="flex-1 border border-cyan-500/10 rounded-lg bg-black/50 backdrop-blur-xl overflow-hidden flex flex-col">
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
               {messages.length === 0 ? (
                 <div className="h-full flex items-center justify-center">
                   <div className="text-center space-y-4">
@@ -547,11 +571,11 @@ const FinancialAIAssistant = () => {
               ) : (
                 messages.map((message) => (
                   <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in duration-300`}>
-                    <div className={`max-w-2xl ${
+                    <div className={`max-w-xs md:max-w-2xl ${
                       message.type === 'user'
                         ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg rounded-tr-none'
                         : 'bg-black border border-cyan-500/20 text-gray-100 rounded-lg rounded-tl-none'
-                    } px-6 py-4`}>
+                    } px-4 md:px-6 py-4`}>
                       {message.type === 'ai' && (
                         <div className="flex items-center space-x-2 mb-3 pb-3 border-b border-cyan-500/10">
                           <Sparkles className="w-4 h-4 text-cyan-400" />
@@ -580,7 +604,7 @@ const FinancialAIAssistant = () => {
             </div>
 
             {/* Input */}
-            <div className="border-t border-cyan-500/10 bg-black/50 p-4">
+            <div className="border-t border-cyan-500/10 bg-black/50 p-4 md:p-6">
               <div className="space-y-3">
                 <div className="flex gap-3">
                   <input
@@ -594,31 +618,31 @@ const FinancialAIAssistant = () => {
                   <button
                     onClick={handleSubmit}
                     disabled={selectedCompanies.length === 0 || isLoading}
-                    className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-mono font-bold text-sm hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 transition-all"
+                    className="px-4 md:px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-mono font-bold text-sm hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 transition-all"
                   >
                     {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   </button>
                 </div>
                 
                 {selectedCompanies.length > 0 && !isLoading && (
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-2 flex-wrap text-xs">
                     <button
                       onClick={() => inputRef.current && (inputRef.current.value = `Compare ${selectedCompanies.map(c => c.name).join(' vs ')} revenue growth`)}
-                      className="px-3 py-1 text-xs border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
+                      className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
                     >
-                      Revenue Compare
+                      Revenue
                     </button>
                     <button
                       onClick={() => inputRef.current && (inputRef.current.value = `What are the P/E ratios and profit margins for ${selectedCompanies.map(c => c.name).join(', ')}?`)}
-                      className="px-3 py-1 text-xs border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
+                      className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
                     >
-                      Valuation Metrics
+                      Valuation
                     </button>
                     <button
                       onClick={() => inputRef.current && (inputRef.current.value = `Analyze debt-to-equity and cash flow trends for ${selectedCompanies.map(c => c.name).join(', ')}`)}
-                      className="px-3 py-1 text-xs border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
+                      className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
                     >
-                      Financial Health
+                      Health
                     </button>
                   </div>
                 )}
@@ -627,6 +651,14 @@ const FinancialAIAssistant = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Sidebar Toggle Button */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="md:hidden fixed bottom-6 right-6 z-40 p-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-full shadow-lg hover:from-cyan-500 hover:to-blue-500 transition-all"
+      >
+        {sidebarOpen ? <X className="w-6 h-6" /> : <Filter className="w-6 h-6" />}
+      </button>
 
       <style jsx>{`
         @keyframes blob {
