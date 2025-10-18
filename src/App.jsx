@@ -69,7 +69,7 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen light-bg-primary pt-16">
+      <div className="min-h-screen light-bg-primary">
       
 
         <Routes>
