@@ -70,10 +70,7 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen light-bg-primary pt-16">
-        <Navigation
-          userName={isUserNameSet ? userName : null}
-          onSwitchUser={handleSwitchUser}
-        />
+      
 
         <Routes>
           <Route path="/" element={
