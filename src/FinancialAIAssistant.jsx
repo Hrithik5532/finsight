@@ -4,7 +4,7 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 const FinancialAIAssistant = () => {
-  const API_BASE_URL = 'http://54.243.27.109:8009';
+  const API_BASE_URL = 'https://finsight.tatvahitech.com';
 
   const [userName, setUserName] = useState('');
   const [isUserNameSet, setIsUserNameSet] = useState(false);
