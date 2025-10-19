@@ -4,7 +4,7 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 const FinancialAIAssistant = () => {
-  const API_BASE_URL = 'http://finsight.tatvahitech.com:8989';
+  const API_BASE_URL = 'https://finsight.tatvahitech.com';
   const STREAM_TIMEOUT = 45000;
   const POLL_INTERVAL = 2000;
   const MAX_CHARS = 500;
