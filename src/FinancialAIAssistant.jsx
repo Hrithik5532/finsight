@@ -4,10 +4,10 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 const FinancialAIAssistant = () => {
-  const API_BASE_URL = 'https://finsight.tatvahitech.com';
+  const API_BASE_URL = 'http://finsight.tatvahitech.com:8989';
   const STREAM_TIMEOUT = 45000;
   const POLL_INTERVAL = 2000;
-  const MAX_CHARS = 100000;
+  const MAX_CHARS = 500;
 
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -32,6 +32,7 @@ const FinancialAIAssistant = () => {
   const [currentQueryId, setCurrentQueryId] = useState(null);
   const [pollingActive, setPollingActive] = useState(false);
   const [charCount, setCharCount] = useState(0);
+  const [expandedInput, setExpandedInput] = useState(false);
 
   const inputRef = useRef(null);
   const textareaRef = useRef(null);
@@ -112,6 +113,7 @@ const FinancialAIAssistant = () => {
     setTimeoutWarning(false);
     setCurrentQueryId(null);
     setCharCount(0);
+    setExpandedInput(false);
     clearTimersAndIntervals();
   };
 
@@ -140,11 +142,8 @@ const FinancialAIAssistant = () => {
   const handleInputChange = (e) => {
     const value = e.target.value;
     if (value.length <= MAX_CHARS) {
-      if (textareaRef.current) {
-        textareaRef.current.value = value;
-        textareaRef.current.style.height = 'auto';
-        textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
-      }
+      if (inputRef.current) inputRef.current.value = value;
+      if (textareaRef.current) textareaRef.current.value = value;
       setCharCount(value.length);
     }
   };
@@ -710,52 +709,97 @@ const FinancialAIAssistant = () => {
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  {charCount > 0 && (
-                    <div className="flex justify-between items-center px-2">
-                      <span className="text-xs text-cyan-400 font-mono">Characters: {charCount}/{MAX_CHARS}</span>
+                {!expandedInput ? (
+                  <div className="flex gap-3 items-end">
+                    <div className="flex-1 flex gap-3">
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        placeholder={selectedCompanies.length === 0 ? "Select companies first..." : pollingActive ? "Waiting for response..." : "Ask about fundamentals..."}
+                        onChange={handleInputChange}
+                        onKeyPress={(e) => e.key === 'Enter' && !isLoading && !pollingActive && handleSubmit(e)}
+                        maxLength={MAX_CHARS}
+                        className="flex-1 px-4 py-3 bg-black border border-cyan-500/20 rounded-lg text-white placeholder-gray-600 text-sm focus:border-cyan-400 focus:outline-none font-mono transition-all disabled:opacity-50"
+                        disabled={selectedCompanies.length === 0 || isLoading || pollingActive}
+                      />
+                      <button
+                        onClick={() => setExpandedInput(true)}
+                        className="px-3 py-3 text-cyan-400 hover:text-cyan-300 border border-cyan-500/20 hover:border-cyan-500/50 rounded-lg transition-all"
+                        title="Expand to textarea"
+                        disabled={selectedCompanies.length === 0 || isLoading || pollingActive}
+                      >
+                        <Maximize2 className="w-4 h-4" />
+                      </button>
                     </div>
-                  )}
-                  <div className="flex gap-3">
-                    <textarea
-                      ref={textareaRef}
-                      placeholder={selectedCompanies.length === 0 ? "Select companies first..." : pollingActive ? "Waiting for response..." : "Ask about fundamentals..."}
-                      onChange={handleInputChange}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && e.ctrlKey && !isLoading && !pollingActive) {
-                          handleSubmit(e);
-                        }
-                      }}
-                      maxLength={MAX_CHARS}
-                      disabled={selectedCompanies.length === 0 || isLoading || pollingActive}
-                      className="flex-1 px-4 py-3 bg-black border border-cyan-500/20 rounded-lg text-white placeholder-gray-600 text-sm focus:border-cyan-400 focus:outline-none font-mono transition-all disabled:opacity-50 resize-none overflow-hidden"
-                      style={{
-                        minHeight: '44px',
-                        maxHeight: '200px',
-                        height: '44px'
-                      }}
-                    />
                     <button
                       onClick={handleSubmit}
                       disabled={selectedCompanies.length === 0 || isLoading || pollingActive}
-                      className="px-4 md:px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-mono font-bold text-sm hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 transition-all flex-shrink-0"
+                      className="px-4 md:px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-mono font-bold text-sm hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 transition-all"
                     >
                       {isLoading || pollingActive ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     </button>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-cyan-400 font-mono">CHARACTER LIMIT: {charCount}/{MAX_CHARS}</span>
+                      <button
+                        onClick={() => setExpandedInput(false)}
+                        className="p-1 text-cyan-400 hover:text-cyan-300 transition-all"
+                        title="Collapse textarea"
+                      >
+                        <Minimize2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <textarea
+                      ref={textareaRef}
+                      placeholder={selectedCompanies.length === 0 ? "Select companies first..." : pollingActive ? "Waiting for response..." : "Ask about fundamentals..."}
+                      onChange={handleInputChange}
+                      maxLength={MAX_CHARS}
+                      disabled={selectedCompanies.length === 0 || isLoading || pollingActive}
+                      className="w-full h-32 px-4 py-3 bg-black border border-cyan-500/20 rounded-lg text-white placeholder-gray-600 text-sm focus:border-cyan-400 focus:outline-none font-mono transition-all disabled:opacity-50 resize-none"
+                    />
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleSubmit}
+                        disabled={selectedCompanies.length === 0 || isLoading || pollingActive}
+                        className="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-mono font-bold text-sm hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 transition-all flex items-center justify-center space-x-2"
+                      >
+                        {isLoading || pollingActive ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            <span>Processing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4" />
+                            <span>Send Query</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setExpandedInput(false);
+                          if (inputRef.current) inputRef.current.value = '';
+                          if (textareaRef.current) textareaRef.current.value = '';
+                          setCharCount(0);
+                        }}
+                        className="px-4 py-3 border border-red-500/20 hover:border-red-500/50 text-red-400 rounded-lg font-mono text-sm transition-all"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {selectedCompanies.length > 0 && !isLoading && !pollingActive && charCount === 0 && (
                   <div className="flex gap-2 flex-wrap text-xs">
                     <button
                       onClick={() => {
                         const text = `Compare ${selectedCompanies.map(c => c.name).join(' vs ')} revenue growth`;
-                        if (textareaRef.current) {
-                          textareaRef.current.value = text;
-                          textareaRef.current.style.height = 'auto';
-                          textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
-                          setCharCount(text.length);
-                        }
+                        if (inputRef.current) inputRef.current.value = text;
+                        if (textareaRef.current) textareaRef.current.value = text;
+                        setCharCount(text.length);
                       }}
                       className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
                     >
@@ -764,12 +808,9 @@ const FinancialAIAssistant = () => {
                     <button
                       onClick={() => {
                         const text = `What are the P/E ratios and profit margins for ${selectedCompanies.map(c => c.name).join(', ')}?`;
-                        if (textareaRef.current) {
-                          textareaRef.current.value = text;
-                          textareaRef.current.style.height = 'auto';
-                          textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
-                          setCharCount(text.length);
-                        }
+                        if (inputRef.current) inputRef.current.value = text;
+                        if (textareaRef.current) textareaRef.current.value = text;
+                        setCharCount(text.length);
                       }}
                       className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
                     >
@@ -778,12 +819,9 @@ const FinancialAIAssistant = () => {
                     <button
                       onClick={() => {
                         const text = `Analyze debt-to-equity and cash flow trends for ${selectedCompanies.map(c => c.name).join(', ')}`;
-                        if (textareaRef.current) {
-                          textareaRef.current.value = text;
-                          textareaRef.current.style.height = 'auto';
-                          textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
-                          setCharCount(text.length);
-                        }
+                        if (inputRef.current) inputRef.current.value = text;
+                        if (textareaRef.current) textareaRef.current.value = text;
+                        setCharCount(text.length);
                       }}
                       className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
                     >
