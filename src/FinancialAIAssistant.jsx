@@ -4,9 +4,11 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 const FinancialAIAssistant = () => {
-  const API_BASE_URL = 'https://finsight.tatvahitech.com';
+  const PRIMARY_API = 'https://finsight.tatvahitech.com';
+  const FALLBACK_API = 'https://finsight.tatvahitech.com';
   const STREAM_TIMEOUT = 45000;
   const POLL_INTERVAL = 2000;
+  const MAX_RETRIES = 2;
   const MAX_CHARS = 500;
 
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -33,6 +35,7 @@ const FinancialAIAssistant = () => {
   const [pollingActive, setPollingActive] = useState(false);
   const [charCount, setCharCount] = useState(0);
   const [expandedInput, setExpandedInput] = useState(false);
+  const [apiStatus, setApiStatus] = useState('primary');
 
   const inputRef = useRef(null);
   const textareaRef = useRef(null);
@@ -79,6 +82,33 @@ const FinancialAIAssistant = () => {
     return filtered;
   }, [companies, searchQuery, selectedSector, selectedIndustry]);
 
+  // Retry logic with fallback
+  const fetchWithRetry = async (endpoint, options = {}, retryCount = 0) => {
+    const apiUrl = apiStatus === 'fallback' ? FALLBACK_API : PRIMARY_API;
+    const fullUrl = `${apiUrl}${endpoint}`;
+
+    try {
+      const response = await fetch(fullUrl, {
+        ...options,
+        signal: abortControllerRef.current?.signal,
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      setApiStatus('primary');
+      return response;
+    } catch (error) {
+      if (retryCount < MAX_RETRIES) {
+        // Try fallback API
+        if (apiStatus === 'primary') {
+          setApiStatus('fallback');
+          console.log('Primary API failed, attempting fallback...');
+          return fetchWithRetry(endpoint, options, retryCount + 1);
+        }
+      }
+      throw error;
+    }
+  };
+
   useEffect(() => {
     if (isUserNameSet && userName) {
       loadCompanies();
@@ -88,7 +118,7 @@ const FinancialAIAssistant = () => {
   const loadCompanies = async () => {
     setIsLoadingCompanies(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/companies/search`);
+      const response = await fetchWithRetry('/companies/search');
       const data = await response.json();
       if (data.status === 'success' && data.companies) {
         const validCompanies = data.companies.filter(c => c.name && c.name.trim());
@@ -96,6 +126,7 @@ const FinancialAIAssistant = () => {
       }
     } catch (error) {
       console.error('Error loading companies:', error);
+      setValidationError('Failed to load companies. Please refresh the page.');
     } finally {
       setIsLoadingCompanies(false);
     }
@@ -114,6 +145,7 @@ const FinancialAIAssistant = () => {
     setCurrentQueryId(null);
     setCharCount(0);
     setExpandedInput(false);
+    setApiStatus('primary');
     clearTimersAndIntervals();
   };
 
@@ -150,9 +182,9 @@ const FinancialAIAssistant = () => {
 
   const pollForResponse = async (queryId, messageId) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/financial/chat/query/${queryId}`,
-        { signal: abortControllerRef.current?.signal }
+      const response = await fetchWithRetry(
+        `/financial/chat/query/${queryId}`,
+        { method: 'GET' }
       );
 
       if (!response.ok) throw new Error('Failed to fetch query');
@@ -264,13 +296,12 @@ const FinancialAIAssistant = () => {
         }
       }, STREAM_TIMEOUT);
 
-      const response = await fetch(`${API_BASE_URL}/financial/chat/`, {
+      const response = await fetchWithRetry('/financial/chat/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
-        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) throw new Error('Failed to get response');
@@ -457,8 +488,12 @@ const FinancialAIAssistant = () => {
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <div className="text-xs text-cyan-400 font-mono px-3 py-1 border border-cyan-500/30 rounded-full bg-cyan-500/5">
-              {queryCount} Queries
+            <div className={`text-xs font-mono px-3 py-1 border rounded-full ${
+              apiStatus === 'fallback'
+                ? 'border-orange-500/30 bg-orange-500/5 text-orange-400'
+                : 'border-cyan-500/30 bg-cyan-500/5 text-cyan-400'
+            }`}>
+              {apiStatus === 'fallback' ? 'Backup API' : 'Primary API'} • {queryCount} Queries
             </div>
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
