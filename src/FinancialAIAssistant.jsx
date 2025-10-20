@@ -831,14 +831,25 @@ const FinancialAIAssistant = () => {
                   <div className="flex gap-2 flex-wrap text-xs">
                     <button
                       onClick={() => {
-                        const text = `Technical Ananlysis over 1 month of ${selectedCompanies.map(c => c.name).join(' vs ')}`;
+                        const text = `Technical Ananlysis of ${selectedCompanies.map(c => c.name).join(' vs ')}`;
                         if (inputRef.current) inputRef.current.value = text;
                         if (textareaRef.current) textareaRef.current.value = text;
                         setCharCount(text.length);
                       }}
                       className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
                     >
-                      Technical Ananlysis over 1 month
+                      Technical Ananlysis 
+                    </button>
+                    <button
+                      onClick={() => {
+                        const text = `Fundamental Analysis of ${selectedCompanies.map(c => c.name).join(' vs ')}`;
+                        if (inputRef.current) inputRef.current.value = text;
+                        if (textareaRef.current) textareaRef.current.value = text;
+                        setCharCount(text.length);
+                      }}
+                      className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
+                    >
+                      Fundamental Analysis
                     </button>
                     <button
                       onClick={() => {
@@ -861,6 +872,17 @@ const FinancialAIAssistant = () => {
                       className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
                     >
                       Health
+                    </button>
+                     <button
+                      onClick={() => {
+                        const text = `Show available financial data tables of  ${selectedCompanies.map(c => c.name).join(', ')}`;
+                        if (inputRef.current) inputRef.current.value = text;
+                        if (textareaRef.current) textareaRef.current.value = text;
+                        setCharCount(text.length);
+                      }}
+                      className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
+                    >
+                      Financial Data Availablity
                     </button>
                   </div>
                 )}
