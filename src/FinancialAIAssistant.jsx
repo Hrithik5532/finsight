@@ -853,7 +853,7 @@ const FinancialAIAssistant = () => {
                     </button>
                     <button
                       onClick={() => {
-                        const text = `What are the P/E ratios and profit margins for ${selectedCompanies.map(c => c.name).join(', ')}?`;
+                        const text = `What are the P/E ratios and profit margins of ${selectedCompanies.map(c => c.name).join(', ')} for 2025?`;
                         if (inputRef.current) inputRef.current.value = text;
                         if (textareaRef.current) textareaRef.current.value = text;
                         setCharCount(text.length);
@@ -864,7 +864,7 @@ const FinancialAIAssistant = () => {
                     </button>
                     <button
                       onClick={() => {
-                        const text = `Analyze debt-to-equity and cash flow trends for ${selectedCompanies.map(c => c.name).join(', ')}`;
+                        const text = `Analyze debt-to-equity and cash flow trends of ${selectedCompanies.map(c => c.name).join(', ')} for 2025`;
                         if (inputRef.current) inputRef.current.value = text;
                         if (textareaRef.current) textareaRef.current.value = text;
                         setCharCount(text.length);
