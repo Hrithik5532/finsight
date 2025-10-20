@@ -6,10 +6,10 @@ import remarkGfm from 'remark-gfm';
 const FinancialAIAssistant = () => {
   const PRIMARY_API = 'https://finsight.tatvahitech.com';
   const FALLBACK_API = 'https://finsight.tatvahitech.com';
-  const STREAM_TIMEOUT = 45000;
+  const STREAM_TIMEOUT = 80000;
   const POLL_INTERVAL = 2000;
-  const MAX_RETRIES = 2;
-  const MAX_CHARS = 500;
+  const MAX_RETRIES = 10;
+  const MAX_CHARS = 100000;
 
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -831,14 +831,14 @@ const FinancialAIAssistant = () => {
                   <div className="flex gap-2 flex-wrap text-xs">
                     <button
                       onClick={() => {
-                        const text = `Compare ${selectedCompanies.map(c => c.name).join(' vs ')} revenue growth`;
+                        const text = `Technical Ananlysis over 1 month of ${selectedCompanies.map(c => c.name).join(' vs ')}`;
                         if (inputRef.current) inputRef.current.value = text;
                         if (textareaRef.current) textareaRef.current.value = text;
                         setCharCount(text.length);
                       }}
                       className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
                     >
-                      Revenue
+                      Technical Ananlysis over 1 month
                     </button>
                     <button
                       onClick={() => {
