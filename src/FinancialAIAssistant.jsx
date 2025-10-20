@@ -864,14 +864,14 @@ const FinancialAIAssistant = () => {
                     </button>
                     <button
                       onClick={() => {
-                        const text = `Analyze debt-to-equity and cash flow trends of ${selectedCompanies.map(c => c.name).join(', ')} for 2025`;
+                        const text = `Analyze FCFF of ${selectedCompanies.map(c => c.name).join(', ')} for 2025`;
                         if (inputRef.current) inputRef.current.value = text;
                         if (textareaRef.current) textareaRef.current.value = text;
                         setCharCount(text.length);
                       }}
                       className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
                     >
-                      Health
+                      FCFF
                     </button>
                      <button
                       onClick={() => {
