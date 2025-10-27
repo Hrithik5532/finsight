@@ -831,7 +831,7 @@ const FinancialAIAssistant = () => {
                   <div className="flex gap-2 flex-wrap text-xs">
                     <button
                       onClick={() => {
-                        const text = `Technical Ananlysis of ${selectedCompanies.map(c => c.name).join(' vs ')}`;
+                        const text = `Technical Ananlysis of ${selectedCompanies.map(c => c.name).join(' vs ')} with charts`;
                         if (inputRef.current) inputRef.current.value = text;
                         if (textareaRef.current) textareaRef.current.value = text;
                         setCharCount(text.length);
