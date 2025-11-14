@@ -1,8 +1,192 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Send, Bot, Building2, RefreshCw, Search, X, LogOut, Filter, ChevronDown, TrendingUp, Moon, Sun, Sparkles, Activity, AlertCircle, Clock, Maximize2, Minimize2 } from 'lucide-react';
+import { Send, Bot, Building2, RefreshCw, Search, X, LogOut, Filter, ChevronDown, TrendingUp, Moon, Sun, Sparkles, Activity, AlertCircle, Clock, Maximize2, Minimize2, Eye, FileText } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+// Table Modal Component
+const TableModal = ({ data, onClose, expandedTables, toggleTableExpand }) => {
+  if (!data) return null;
+
+  const tableNames = {
+    'cash-flow': 'Cash Flow Statement',
+    'shareholding': 'Shareholding Pattern',
+    'balance-sheet': 'Balance Sheet',
+    'profit-loss': 'Profit & Loss Statement',
+    'quarters': 'Quarterly Results',
+    'ratios': 'Financial Ratios'
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-black border border-cyan-500/30 rounded-xl w-full max-w-7xl max-h-[90vh] flex flex-col shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-cyan-500/20">
+          <div>
+            <h2 className="text-2xl font-bold text-cyan-400">{data.company}</h2>
+            <p className="text-sm text-gray-400 font-mono mt-1">
+              {data.dataType === 'consolidated' ? 'Consolidated' : 'Standalone'} Financial Data
+            </p>
+            <p className="text-xs text-gray-500 font-mono mt-1">Retrieved: {data.timestamp}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-cyan-500/10 rounded-lg transition-all"
+          >
+            <X className="w-6 h-6 text-cyan-400" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {data.error ? (
+            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-6 text-center">
+              <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
+              <p className="text-red-300 font-mono">{data.error}</p>
+            </div>
+          ) : (
+            Object.entries(data.tables).map(([tableName, tableData]) => (
+              <div key={tableName} className="border border-cyan-500/20 rounded-lg overflow-hidden">
+                {/* Table Header */}
+                <button
+                  onClick={() => toggleTableExpand(tableName)}
+                  className="w-full flex items-center justify-between p-4 bg-cyan-500/10 hover:bg-cyan-500/20 transition-all"
+                >
+                  <div className="flex items-center space-x-3">
+                    <FileText className="w-5 h-5 text-cyan-400" />
+                    <span className="text-lg font-bold text-cyan-300">
+                      {tableNames[tableName] || tableName}
+                    </span>
+                    <span className="text-xs text-gray-500 font-mono">
+                      ({tableData.length} records)
+                    </span>
+                  </div>
+                  <ChevronDown
+                    className={`w-5 h-5 text-cyan-400 transition-transform ${
+                      expandedTables[tableName] ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+
+                {/* Table Content */}
+                {expandedTables[tableName] && (
+                <div className="overflow-x-auto">
+                  {tableData.length > 0 ? (
+
+                    (() => {
+                      // 1. Extract unique periods
+                      const periods = [...new Set(tableData.map(r => r.period))].sort();
+
+                      // 2. Group rows by metric_name
+                      const grouped = tableData.reduce((acc, row) => {
+                        if (!acc[row.metric_name]) acc[row.metric_name] = {};
+                        acc[row.metric_name][row.period] =
+                          row.raw_value + (row.unit ? ` ${row.unit}` : "");
+                        return acc;
+                      }, {});
+
+                      return (
+                        <table className="w-full">
+                          <thead>
+                            <tr className="bg-black/50">
+
+                              {/* First column header */}
+                              <th className="px-4 py-3 text-left text-xs font-mono text-cyan-400 uppercase tracking-wider border-b border-cyan-500/20">
+                                Metric
+                              </th>
+
+                              {/* Dynamic period headers */}
+                              {periods.map(period => (
+                                <th
+                                  key={period}
+                                  className="px-4 py-3 text-left text-xs font-mono text-cyan-400 uppercase tracking-wider border-b border-cyan-500/20"
+                                >
+                                  {period}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+
+                          <tbody className="divide-y divide-cyan-500/10">
+                            {Object.entries(grouped).map(([metric, values], idx) => (
+                              <tr key={idx} className="hover:bg-cyan-500/5 transition-colors">
+
+                                {/* Metric Name */}
+                                <td className="px-4 py-3 text-sm text-gray-300 font-mono font-semibold">
+                                  {metric}
+                                </td>
+
+                                {/* Period values */}
+                                {periods.map(period => (
+                                  <td
+                                    key={period}
+                                    className="px-4 py-3 text-sm text-gray-300 font-mono"
+                                  >
+                                    {values[period] ?? "-"}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      );
+                    })()
+
+                  ) : (
+                    <div className="p-6 text-center text-gray-500 font-mono text-sm">
+                      No data available
+                    </div>
+                  )}
+                </div>
+              )}
+
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Company Selection Item Component
+const CompanySelectionItem = ({ company, onViewData, loadingTable }) => {
+  return (
+    <div className="flex items-center justify-between px-3 py-3 bg-cyan-500/5 border border-cyan-500/20 rounded-lg group hover:border-cyan-500/50 transition-all">
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-mono text-cyan-300 font-semibold">{company.name}</div>
+        <div className="text-xs text-gray-600 font-mono">{company.sector}</div>
+      </div>
+      <div className="flex items-center space-x-2 ml-3">
+        <button
+          onClick={() => onViewData(company.name, 'consolidated')}
+          disabled={loadingTable === `${company.name}-consolidated`}
+          className="px-3 py-1.5 text-xs font-mono bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-400 border border-cyan-500/30 rounded transition-all disabled:opacity-50 flex items-center space-x-1"
+        >
+          {loadingTable === `${company.name}-consolidated` ? (
+            <RefreshCw className="w-3 h-3 animate-spin" />
+          ) : (
+            <Eye className="w-3 h-3" />
+          )}
+          <span>Consolidated</span>
+        </button>
+        <button
+          onClick={() => onViewData(company.name, 'standalone')}
+          disabled={loadingTable === `${company.name}-standalone`}
+          className="px-3 py-1.5 text-xs font-mono bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded transition-all disabled:opacity-50 flex items-center space-x-1"
+        >
+          {loadingTable === `${company.name}-standalone` ? (
+            <RefreshCw className="w-3 h-3 animate-spin" />
+          ) : (
+            <Eye className="w-3 h-3" />
+          )}
+          <span>Standalone</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Main Component
 const FinancialAIAssistant = () => {
   const PRIMARY_API = 'https://finsight.tatvahitech.com';
   const FALLBACK_API = 'https://finsight.tatvahitech.com';
@@ -36,6 +220,9 @@ const FinancialAIAssistant = () => {
   const [charCount, setCharCount] = useState(0);
   const [expandedInput, setExpandedInput] = useState(false);
   const [apiStatus, setApiStatus] = useState('primary');
+  const [loadingTable, setLoadingTable] = useState(null);
+  const [selectedData, setSelectedData] = useState(null);
+  const [expandedTables, setExpandedTables] = useState({});
 
   const inputRef = useRef(null);
   const textareaRef = useRef(null);
@@ -82,7 +269,6 @@ const FinancialAIAssistant = () => {
     return filtered;
   }, [companies, searchQuery, selectedSector, selectedIndustry]);
 
-  // Retry logic with fallback
   const fetchWithRetry = async (endpoint, options = {}, retryCount = 0) => {
     const apiUrl = apiStatus === 'fallback' ? FALLBACK_API : PRIMARY_API;
     const fullUrl = `${apiUrl}${endpoint}`;
@@ -98,7 +284,6 @@ const FinancialAIAssistant = () => {
       return response;
     } catch (error) {
       if (retryCount < MAX_RETRIES) {
-        // Try fallback API
         if (apiStatus === 'primary') {
           setApiStatus('fallback');
           console.log('Primary API failed, attempting fallback...');
@@ -146,6 +331,8 @@ const FinancialAIAssistant = () => {
     setCharCount(0);
     setExpandedInput(false);
     setApiStatus('primary');
+    setSelectedData(null);
+    setExpandedTables({});
     clearTimersAndIntervals();
   };
 
@@ -161,14 +348,57 @@ const FinancialAIAssistant = () => {
       if (isAlreadySelected) {
         return prev.filter(c => c.name !== company.name);
       } else {
-        return [...prev, company];
+        // Store the full company object including slug
+        return [...prev, { ...company }];
       }
     });
     setValidationError('');
   };
 
+  const toggleTableExpand = (tableName) => {
+    setExpandedTables(prev => ({
+      ...prev,
+      [tableName]: !prev[tableName]
+    }));
+  };
+
   const handleRemoveCompany = (companyName) => {
     setSelectedCompanies(prev => prev.filter(c => c.name !== companyName));
+  };
+
+  const handleViewData = async (companySlug, dataType) => {
+    setLoadingTable(`${companySlug}-${dataType}`);
+    console.log(`Fetching data for ${companySlug} (${dataType})...`);
+    try {
+      const response = await fetch(`${PRIMARY_API}/financial/get-all-tables/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_slug: companySlug,
+          data_type: dataType
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch data');
+      const data = await response.json();
+      
+      setSelectedData({
+        company: data.company,
+        dataType: data.data_type,
+        tables: data.tables,
+        timestamp: new Date().toLocaleString()
+      });
+      setExpandedTables({});
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setSelectedData({
+        error: error.message,
+        company: companySlug,
+        dataType
+      });
+    } finally {
+      setLoadingTable(null);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -401,7 +631,7 @@ const FinancialAIAssistant = () => {
             <div className="flex justify-center mb-8 relative">
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl blur-xl opacity-50 animate-pulse"></div>
               <div className="relative bg-gradient-to-br from-cyan-500 to-black rounded-xl p-4 shadow-2xl">
-                <img src="/logo.png" alt="FinSight Logo" className="h-10 w-15 object-contain" />
+                <Building2 className="h-16 w-16 text-white" />
               </div>
             </div>
 
@@ -476,11 +706,12 @@ const FinancialAIAssistant = () => {
         }}></div>
       </div>
 
+      {/* Header */}
       <div className="relative z-40 border-b border-cyan-500/10 bg-black/50 backdrop-blur-xl px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="relative bg-gradient-to-br to-black rounded-xl p-4 shadow-2xl">
-              <img src="/logo.png" alt="FinSight Logo" className="h-10 w-15 object-contain" />
+            <div className="relative bg-gradient-to-br to-black rounded-xl p-3 shadow-2xl">
+              <Building2 className="h-8 w-8 text-cyan-400" />
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">FinSight</h1>
@@ -496,12 +727,6 @@ const FinancialAIAssistant = () => {
               {apiStatus === 'fallback' ? 'Backup API' : 'Primary API'} • {queryCount} Queries
             </div>
             <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-2 rounded-lg border border-cyan-500/20 hover:border-cyan-500/50 transition-all"
-            >
-              {isDarkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-300" />}
-            </button>
-            <button
               onClick={handleLogout}
               className="flex items-center space-x-2 px-4 py-2 rounded-lg border border-red-500/20 hover:border-red-500/50 text-red-400 font-mono text-sm transition-all"
             >
@@ -512,7 +737,9 @@ const FinancialAIAssistant = () => {
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="flex-1 flex gap-4 px-4 md:px-6 py-4 overflow-hidden">
+        {/* Sidebar */}
         <div className={`fixed md:static inset-0 md:inset-auto w-full md:w-80 h-full md:h-auto flex flex-col gap-4 overflow-hidden z-50 md:z-auto transition-all duration-300 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}>
@@ -623,9 +850,6 @@ const FinancialAIAssistant = () => {
                                 <div className="flex-1 min-w-0">
                                   <div className="text-sm font-mono text-cyan-300 font-semibold">{company.name}</div>
                                   <div className="text-xs text-gray-600 font-mono">{company.sector}</div>
-                                  <div className="text-xs mt-1 space-x-1">
-                                    {company.sector && <span className="inline-block px-2 py-0.5 rounded text-cyan-400 border border-cyan-500/30 bg-cyan-500/5 text-xs">{company.sector}</span>}
-                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -651,25 +875,22 @@ const FinancialAIAssistant = () => {
                     Clear All
                   </button>
                 </div>
-                {selectedCompanies.map(c => (
-                  <div key={c.name} className="flex items-center justify-between px-3 py-2 bg-cyan-500/5 border border-cyan-500/20 rounded-lg group hover:border-cyan-500/50 transition-all">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-mono text-cyan-300">{c.name}</div>
-                      <div className="text-xs text-gray-600 font-mono">{c.sector}</div>
-                    </div>
-                    <button
-                      onClick={() => handleRemoveCompany(c.name)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity ml-2"
-                    >
-                      <X className="w-4 h-4 text-red-400 hover:text-red-300" />
-                    </button>
-                  </div>
-                ))}
+                <div className="space-y-2">
+                  {selectedCompanies.map(c => (
+                    <CompanySelectionItem
+                      key={c.name}
+                      company={c}
+                      onViewData={handleViewData}
+                      loadingTable={loadingTable}
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </div>
         </div>
 
+        {/* Chat Area */}
         <div className="flex-1 flex flex-col gap-4 overflow-hidden min-w-0">
           <div className="flex-1 border border-cyan-500/10 rounded-lg bg-black/50 backdrop-blur-xl overflow-hidden flex flex-col">
             {timeoutWarning && (
@@ -735,6 +956,7 @@ const FinancialAIAssistant = () => {
               <div ref={messagesEndRef} />
             </div>
 
+            {/* Input Area */}
             <div className="border-t border-cyan-500/10 bg-black/50 p-4 md:p-6">
               <div className="space-y-3">
                 {validationError && (
@@ -831,14 +1053,14 @@ const FinancialAIAssistant = () => {
                   <div className="flex gap-2 flex-wrap text-xs">
                     <button
                       onClick={() => {
-                        const text = `Technical Ananlysis of ${selectedCompanies.map(c => c.name).join(' vs ')} with charts`;
+                        const text = `Technical Analysis of ${selectedCompanies.map(c => c.name).join(' vs ')} with charts`;
                         if (inputRef.current) inputRef.current.value = text;
                         if (textareaRef.current) textareaRef.current.value = text;
                         setCharCount(text.length);
                       }}
                       className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
                     >
-                      Technical Ananlysis 
+                      Technical Analysis
                     </button>
                     <button
                       onClick={() => {
@@ -862,28 +1084,6 @@ const FinancialAIAssistant = () => {
                     >
                       Valuation
                     </button>
-                    <button
-                      onClick={() => {
-                        const text = `Analyze FCFF of ${selectedCompanies.map(c => c.name).join(', ')} for 2025`;
-                        if (inputRef.current) inputRef.current.value = text;
-                        if (textareaRef.current) textareaRef.current.value = text;
-                        setCharCount(text.length);
-                      }}
-                      className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
-                    >
-                      FCFF
-                    </button>
-                     <button
-                      onClick={() => {
-                        const text = `Show available financial data tables of  ${selectedCompanies.map(c => c.name).join(', ')}`;
-                        if (inputRef.current) inputRef.current.value = text;
-                        if (textareaRef.current) textareaRef.current.value = text;
-                        setCharCount(text.length);
-                      }}
-                      className="px-3 py-1 border border-cyan-500/30 rounded text-cyan-400 hover:border-cyan-500/50 hover:bg-cyan-500/5 font-mono transition-all"
-                    >
-                      Financial Data Availablity
-                    </button>
                   </div>
                 )}
               </div>
@@ -892,12 +1092,23 @@ const FinancialAIAssistant = () => {
         </div>
       </div>
 
+      {/* Mobile Menu Toggle */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
         className="md:hidden fixed bottom-6 right-6 z-40 p-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-full shadow-lg hover:from-cyan-500 hover:to-blue-500 transition-all"
       >
         {sidebarOpen ? <X className="w-6 h-6" /> : <Filter className="w-6 h-6" />}
       </button>
+
+      {/* Table Modal */}
+      {selectedData && (
+        <TableModal
+          data={selectedData}
+          onClose={() => setSelectedData(null)}
+          expandedTables={expandedTables}
+          toggleTableExpand={toggleTableExpand}
+        />
+      )}
 
       <style>{`
         @keyframes blob {
@@ -915,9 +1126,7 @@ const FinancialAIAssistant = () => {
         .animate-in {
           animation: fadeIn 0.3s ease-out;
         }
-      `}</style>
-
-      <style>{`
+        
         .markdown-content table {
           width: 100%;
           border-collapse: collapse;
@@ -949,15 +1158,9 @@ const FinancialAIAssistant = () => {
           margin-bottom: 0.75rem;
           font-weight: 700;
         }
-        .markdown-content h1 {
-          font-size: 1.5rem;
-        }
-        .markdown-content h2 {
-          font-size: 1.25rem;
-        }
-        .markdown-content h3 {
-          font-size: 1.1rem;
-        }
+        .markdown-content h1 { font-size: 1.5rem; }
+        .markdown-content h2 { font-size: 1.25rem; }
+        .markdown-content h3 { font-size: 1.1rem; }
         .markdown-content p {
           margin-bottom: 1rem;
           line-height: 1.6;
